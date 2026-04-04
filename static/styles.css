@@ -86,7 +86,6 @@ textarea,
 .query-helper-row,
 .settings-status span,
 .connection-card-footer span,
-.best-practices-list,
 .workspace-card-copy small {
   font-family: var(--mono-font);
 }
@@ -1336,43 +1335,6 @@ button:disabled {
 .settings-status span {
   color: rgba(163, 170, 196, 0.84);
   font-size: 0.78rem;
-}
-
-.best-practices-panel {
-  padding: 20px 24px;
-  display: grid;
-  gap: 16px;
-  border-radius: 24px;
-  background: linear-gradient(90deg, rgba(15, 25, 48, 0.96), rgba(9, 19, 40, 0.96));
-  box-shadow: var(--shadow);
-}
-
-.best-practices-copy {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.best-practices-copy .material-symbols-outlined {
-  color: var(--primary);
-}
-
-.best-practices-copy h3 {
-  margin: 0;
-  font-family: var(--headline-font);
-}
-
-.best-practices-copy p {
-  margin: 4px 0 0;
-  color: rgba(163, 170, 196, 0.84);
-}
-
-.best-practices-list {
-  margin: 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 6px;
-  color: rgba(222, 229, 255, 0.8);
 }
 
 .object-header {

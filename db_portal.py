@@ -245,11 +245,6 @@ def create_app():
         spotlight = build_spotlight(catalog)
         connection = build_connection_snapshot()
         active_connections = build_active_connections()
-        best_practices = [
-            "Use the read-only app user for class sharing.",
-            "Keep TLS enabled against Azure MySQL.",
-            "Remove temporary firewall rules when direct admin access is no longer needed.",
-        ]
         return render_template(
             "settings.html",
             active_page="settings",
@@ -258,7 +253,6 @@ def create_app():
             active_connections=active_connections,
             stats=stats,
             spotlight=spotlight,
-            best_practices=best_practices,
         )
 
     @app.route("/api/connection-check")

@@ -135,18 +135,4 @@
   </section>
 </section>
 
-<section class="surface best-practices-panel reveal delay-2">
-  <div class="best-practices-copy">
-    <span class="material-symbols-outlined">info</span>
-    <div>
-      <h3>Best practices</h3>
-      <p>Keep direct admin firewall access temporary, keep TLS on, and use the read-only app user for classmates.</p>
-    </div>
-  </div>
-  <ul class="best-practices-list">
-    {% for item in best_practices %}
-      <li>{{ item }}</li>
-    {% endfor %}
-  </ul>
-</section>
 {% endblock %}
