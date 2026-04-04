@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Executive / Reports</div>
+    <h1 class="page-title">Sales reporting</h1>
+    <p class="section-copy">Branch sales rollup and detailed line-item visibility powered by `vw_sale_detail` and core sale tables.</p>
+  </div>
+</section>
+
+<section class="surface panel reveal delay-1">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Branch sales summary</div>
+      <h2>Sales by branch</h2>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Branch</th>
+          <th>Address</th>
+          <th>Sales count</th>
+          <th>Gross sales</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in branch_rows %}
+          <tr>
+            <td>{{ row.branch_ID }}</td>
+            <td>{{ row.branch_address }}</td>
+            <td>{{ row.sale_count }}</td>
+            <td>${{ row.gross_sales }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="4" class="empty-cell">No sales summary available.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="surface panel reveal delay-2">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Line-item detail</div>
+      <h2>Recent sale detail rows</h2>
+    </div>
+    <span class="pill">{{ detail_rows|length }} rows</span>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sale ID</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Product</th>
+          <th>Qty</th>
+          <th>Unit price</th>
+          <th>Line total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in detail_rows %}
+          <tr>
+            <td>{{ row.sale_ID }}</td>
+            <td>{{ row.sale_date }}</td>
+            <td>{{ row.customer_name }}</td>
+            <td>{{ row.product_description }}</td>
+            <td>{{ row.quantity }}</td>
+            <td>${{ row.unit_price }}</td>
+            <td>${{ row.line_total }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="7" class="empty-cell">No sale detail rows available.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

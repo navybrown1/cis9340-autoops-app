@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Access Control</div>
+    <h1 class="page-title">Unauthorized</h1>
+    <p class="section-copy">Your current role does not have permission for this page.</p>
+    <div class="action-row">
+      <a class="studio-button studio-button-primary" href="{{ url_for('app_home') }}">
+        <span class="material-symbols-outlined">home</span>
+        <span>Back to role home</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

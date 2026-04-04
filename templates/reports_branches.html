@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Executive / Reports</div>
+    <h1 class="page-title">Branch comparisons</h1>
+    <p class="section-copy">Branch-level sales, open repair pressure, and inventory reorder exposure using current production schema and views.</p>
+  </div>
+</section>
+
+<section class="surface panel reveal delay-1">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Branch metrics</div>
+      <h2>Performance by branch</h2>
+    </div>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Branch</th>
+          <th>Address</th>
+          <th>Sale count</th>
+          <th>Gross sales</th>
+          <th>Open repairs</th>
+          <th>Reorder alerts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{{ row.branch_ID }}</td>
+            <td>{{ row.branch_address }}</td>
+            <td>{{ row.sale_count }}</td>
+            <td>${{ row.gross_sales }}</td>
+            <td>{{ row.open_repairs }}</td>
+            <td>{{ row.reorder_alerts }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="6" class="empty-cell">No branch metrics available.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

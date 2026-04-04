@@ -12,6 +12,7 @@
 </head>
 <body data-page="{{ active_page or '' }}">
   <div class="app-shell">
+    {% if show_sidebar %}
     <aside class="sidebar">
       <div class="brand-lockup">
         <div class="brand-mark" aria-hidden="true">
@@ -21,47 +22,42 @@
         </div>
         <div>
           <div class="brand-name">CIS 9340</div>
-          <div class="brand-subtitle">Data Studio</div>
+          <div class="brand-subtitle">{% if current_user_role and current_user_role != 'admin' %}AutoOps{% else %}Data Studio{% endif %}</div>
         </div>
       </div>
 
-      <a class="sidebar-cta" href="{{ url_for('query_lab') }}">
-        <span class="material-symbols-outlined">add</span>
-        <span>New Query</span>
+      {% if sidebar_cta %}
+      <a class="sidebar-cta" href="{{ url_for(sidebar_cta.endpoint) }}">
+        <span class="material-symbols-outlined">{{ sidebar_cta.icon }}</span>
+        <span>{{ sidebar_cta.label }}</span>
       </a>
+      {% endif %}
 
       <nav class="sidebar-nav" aria-label="Primary">
-        <a class="sidebar-link {{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
-          <span class="material-symbols-outlined">dashboard</span>
-          <span>Dashboard</span>
-        </a>
-        <a class="sidebar-link {{ 'active' if active_page == 'catalog' else '' }}" href="{{ url_for('catalog') }}">
-          <span class="material-symbols-outlined">table_view</span>
-          <span>Catalog</span>
-        </a>
-        <a class="sidebar-link {{ 'active' if active_page == 'query' else '' }}" href="{{ url_for('query_lab') }}">
-          <span class="material-symbols-outlined">terminal</span>
-          <span>Query Lab</span>
-        </a>
-        <a class="sidebar-link {{ 'active' if active_page == 'settings' else '' }}" href="{{ url_for('settings') }}">
-          <span class="material-symbols-outlined">settings</span>
-          <span>Settings</span>
-        </a>
+        {% for item in nav_items %}
+          <a class="sidebar-link {{ 'active' if active_page == item.key else '' }}" href="{{ url_for(item.endpoint) }}">
+            <span class="material-symbols-outlined">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        {% endfor %}
       </nav>
 
       <div class="sidebar-spacer"></div>
 
       <div class="workspace-card">
-        <div class="workspace-card-avatar">EB</div>
+        <div class="workspace-card-avatar">{{ current_user_initials }}</div>
         <div class="workspace-card-copy">
-          <strong>Edwin Brown</strong>
+          <strong>{{ current_user_name }}</strong>
           <span>{{ server_label }}</span>
+          {% if current_user_role %}<small>{{ current_user_role|title }}</small>{% endif %}
           <small>{{ connection_target }}</small>
         </div>
       </div>
     </aside>
+    {% endif %}
 
     <main class="workspace">
+      {% if not hide_topbar %}
       <header class="topbar">
         <form class="global-search" action="{{ search_action or url_for('catalog') }}" method="get">
           <span class="material-symbols-outlined">search</span>
@@ -78,10 +74,16 @@
         <div class="topbar-actions" aria-label="Status and shortcuts">
           <div class="avatar-chip" aria-label="Workspace avatar">
             <span class="avatar-dot"></span>
-            <span>EB</span>
+            <span>{{ current_user_initials }}</span>
           </div>
+          {% if auth_enabled and is_authenticated %}
+          <form method="post" action="{{ url_for('logout') }}">
+            <button class="toolbar-button" type="submit">Sign out</button>
+          </form>
+          {% endif %}
         </div>
       </header>
+      {% endif %}
 
       <div class="workspace-body">
         {% with messages = get_flashed_messages(with_categories=true) %}

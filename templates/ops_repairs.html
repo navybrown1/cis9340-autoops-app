@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Repair Desk / Workflow</div>
+    <h1 class="page-title">Repair queue</h1>
+    <p class="section-copy">Manage repair assignments, update status, and create repair records from appointments.</p>
+  </div>
+</section>
+
+<section class="catalog-layout reveal delay-1">
+  <div class="surface panel catalog-panel">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Current queue</div>
+        <h2>Repairs</h2>
+      </div>
+      <span class="pill">{{ queue_rows|length }} rows</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Repair ID</th>
+            <th>Status</th>
+            <th>Cost</th>
+            <th>Appointment</th>
+            <th>Customer</th>
+            <th>Date/Time</th>
+            <th>Type</th>
+            <th>Mechanic</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in queue_rows %}
+            <tr>
+              <td>{{ row.repair_ID }}</td>
+              <td>{{ row.status }}</td>
+              <td>${{ row.cost }}</td>
+              <td>{{ row.appointment_ID }}</td>
+              <td>{{ row.customer_name or row.customer_ID }}</td>
+              <td>{{ row.appointment_date }} {{ row.appointment_time }}</td>
+              <td>{{ row.appointment_type }}</td>
+              <td>{{ row.mechanic_name or row.employee_ID }}</td>
+            </tr>
+          {% else %}
+            <tr><td colspan="8" class="empty-cell">No repairs found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="catalog-rail">
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Update</div>
+          <h2>Update repair status</h2>
+        </div>
+      </div>
+      {% if not writes_enabled %}
+        <div class="empty-state">Write actions are disabled. Set <code>OPS_WRITE_ENABLED=true</code> to enable updates.</div>
+      {% endif %}
+      <form method="post" class="auth-form">
+        <input type="hidden" name="action" value="update_repair">
+        <label><span>Repair ID</span><input type="number" min="1" name="repair_id" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <label>
+          <span>Status</span>
+          <select name="status" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="In Progress">In Progress</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </label>
+        <label><span>Cost</span><input type="number" min="0" step="0.01" name="cost" {% if not writes_enabled %}disabled{% endif %}></label>
+        <label>
+          <span>Assigned employee</span>
+          <select name="employee_id" {% if not writes_enabled %}disabled{% endif %}>
+            <option value="">Keep current</option>
+            {% for row in mechanics %}
+              <option value="{{ row.employee_ID }}">{{ row.employee_ID }} - {{ row.employee_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button class="studio-button studio-button-primary" type="submit" {% if not writes_enabled %}disabled{% endif %}>Update repair</button>
+      </form>
+    </section>
+
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Create</div>
+          <h2>Promote appointment to repair</h2>
+        </div>
+      </div>
+      <form method="post" class="auth-form">
+        <input type="hidden" name="action" value="create_repair">
+        <label>
+          <span>Appointment</span>
+          <select name="appointment_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select appointment</option>
+            {% for row in unassigned_appointments %}
+              <option value="{{ row.appointment_ID }}">{{ row.appointment_ID }} - {{ row.customer_name }} ({{ row.date }} {{ row.time }})</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Assigned employee</span>
+          <select name="employee_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select employee</option>
+            {% for row in mechanics %}
+              <option value="{{ row.employee_ID }}">{{ row.employee_ID }} - {{ row.employee_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Status</span>
+          <select name="status" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="In Progress">In Progress</option>
+            <option value="On Hold">On Hold</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </label>
+        <label><span>Initial cost</span><input type="number" min="0" step="0.01" name="cost" value="0" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <button class="studio-button studio-button-primary" type="submit" {% if not writes_enabled %}disabled{% endif %}>Create repair</button>
+      </form>
+    </section>
+  </aside>
+</section>
+{% endblock %}

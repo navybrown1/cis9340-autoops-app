@@ -2223,3 +2223,51 @@ button:disabled {
     border-radius: 16px;
   }
 }
+
+.auth-wrap {
+  min-height: calc(100vh - 140px);
+  display: grid;
+  place-items: center;
+  padding: 32px 0;
+}
+
+.auth-card {
+  width: min(520px, 100%);
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.auth-form input {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: rgba(7, 15, 35, 0.82);
+  color: var(--text-primary);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.auth-form select {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: rgba(7, 15, 35, 0.82);
+  color: var(--text-primary);
+  padding: 12px 14px;
+  font: inherit;
+}
+
+.auth-note {
+  margin-top: 14px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}

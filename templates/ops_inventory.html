@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Operations / Workflow</div>
+    <h1 class="page-title">Inventory workspace</h1>
+    <p class="section-copy">Track branch inventory levels and reorder risk from the curated inventory reporting view.</p>
+  </div>
+</section>
+
+<section class="surface panel reveal delay-1">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Filters</div>
+      <h2>Branch inventory lookup</h2>
+    </div>
+    <span class="pill">{{ rows|length }} rows</span>
+  </div>
+  <form class="query-helper-row" method="get" action="{{ url_for('ops_inventory') }}">
+    <select name="branch_id">
+      <option value="">All branches</option>
+      {% for row in branches %}
+        <option value="{{ row.branch_ID }}" {% if branch_filter == (row.branch_ID|string) %}selected{% endif %}>
+          Branch {{ row.branch_ID }} - {{ row.address }}
+        </option>
+      {% endfor %}
+    </select>
+    <button class="studio-button studio-button-primary" type="submit">Apply filter</button>
+  </form>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Branch</th>
+          <th>Address</th>
+          <th>Product</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Reorder</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{{ row.branch_ID }}</td>
+            <td>{{ row.branch_address }}</td>
+            <td>{{ row.product_ID }}</td>
+            <td>{{ row.product_type }}</td>
+            <td>{{ row.description }}</td>
+            <td>{{ row.quantity_in_inventory }}</td>
+            <td>{{ row.reorder_level }}</td>
+            <td>{{ row.stock_status }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" class="empty-cell">No inventory rows found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

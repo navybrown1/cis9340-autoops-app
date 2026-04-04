@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Front Desk / Workflow</div>
+    <h1 class="page-title">Customer workspace</h1>
+    <p class="section-copy">Find existing customers and add new intake records with role-safe controls.</p>
+  </div>
+</section>
+
+<section class="catalog-layout reveal delay-1">
+  <div class="surface panel catalog-panel">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Search customers</div>
+        <h2>Customer directory</h2>
+      </div>
+      <span class="pill">{{ customers|length }} rows</span>
+    </div>
+    <form class="query-helper-row" method="get" action="{{ url_for('ops_customers') }}">
+      <input class="sql-editor" style="min-height:48px;" type="search" name="q" value="{{ search_query or '' }}" placeholder="Search by name, customer ID, phone, or email">
+      <button class="studio-button studio-button-primary" type="submit">Search</button>
+    </form>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Customer ID</th>
+            <th>Name</th>
+            <th>DOB</th>
+            <th>Phone</th>
+            <th>Email</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in customers %}
+            <tr>
+              <td>{{ row.customer_ID }}</td>
+              <td>{{ row.first_name }} {{ row.last_name }}</td>
+              <td>{{ row.DOB }}</td>
+              <td>{{ row.phone }}</td>
+              <td>{{ row.email }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" class="empty-cell">No customers found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="catalog-rail">
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Intake</div>
+          <h2>Create customer</h2>
+        </div>
+      </div>
+      {% if not writes_enabled %}
+        <div class="empty-state">Write actions are disabled. Set <code>OPS_WRITE_ENABLED=true</code> to enable creation.</div>
+      {% endif %}
+      <form method="post" class="auth-form">
+        <label><span>First name</span><input type="text" name="first_name" required {% if not writes_enabled %}disabled{% endif %}></label>
+        <label><span>Last name</span><input type="text" name="last_name" required {% if not writes_enabled %}disabled{% endif %}></label>
+        <label><span>Date of birth</span><input type="date" name="dob" {% if not writes_enabled %}disabled{% endif %}></label>
+        <label><span>Address</span><input type="text" name="address" {% if not writes_enabled %}disabled{% endif %}></label>
+        <label><span>Phone</span><input type="text" name="phone" {% if not writes_enabled %}disabled{% endif %}></label>
+        <label><span>Email</span><input type="email" name="email" {% if not writes_enabled %}disabled{% endif %}></label>
+        <button class="studio-button studio-button-primary" type="submit" {% if not writes_enabled %}disabled{% endif %}>Create customer</button>
+      </form>
+    </section>
+  </aside>
+</section>
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Operations / Dashboard</div>
+    <h1 class="page-title">Operational control center</h1>
+    <p class="section-copy">Role-friendly workflows are now separated from technical studio tools. This dashboard uses the same backend and views with role-aware navigation.</p>
+  </div>
+</section>
+
+<section class="metric-grid reveal delay-1">
+  {% for item in metrics %}
+    <article class="metric-card">
+      <span class="metric-label">{{ item.label }}</span>
+      <strong>{{ item.value }}</strong>
+      <small>Live from {{ database_name }}</small>
+    </article>
+  {% endfor %}
+</section>
+
+<section class="catalog-layout reveal delay-2">
+  <div class="surface panel catalog-panel">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Repair and appointment load</div>
+        <h2>Queue backlog</h2>
+      </div>
+      <span class="pill">{{ backlog|length }} items</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Appointment</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in backlog %}
+            <tr>
+              <td>{{ row.appointment_ID }}</td>
+              <td>{{ row.date }}</td>
+              <td>{{ row.time }}</td>
+              <td>{{ row.status }}</td>
+              <td>{{ row.appointment_type }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="5" class="empty-cell">No queued appointments found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="catalog-rail">
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Sales summary</div>
+          <h2>By branch</h2>
+        </div>
+      </div>
+      <div class="insight-list">
+        {% for row in sales %}
+          <div class="insight-row">
+            <div class="insight-row-top">
+              <strong>Branch {{ row.branch_ID }}</strong>
+              <span>{{ row.sale_count }} sales</span>
+            </div>
+            <small>{{ row.branch_address }}</small>
+            <div class="section-meta">${{ row.gross_amount }}</div>
+          </div>
+        {% else %}
+          <div class="empty-state">No sales summary data available.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Inventory warnings</div>
+          <h2>Reorder alerts</h2>
+        </div>
+      </div>
+      <div class="insight-list">
+        {% for row in alerts %}
+          <div class="insight-row">
+            <div class="insight-row-top">
+              <strong>Branch {{ row.branch_ID }} / Product {{ row.product_ID }}</strong>
+              <span>{{ row.stock_status }}</span>
+            </div>
+            <small>{{ row.description }}</small>
+            <div class="section-meta">Qty {{ row.quantity_in_inventory }} (reorder {{ row.reorder_level }})</div>
+          </div>
+        {% else %}
+          <div class="empty-state">No inventory alerts currently.</div>
+        {% endfor %}
+      </div>
+    </section>
+  </aside>
+</section>
+
+<section class="surface accent-panel reveal delay-3">
+  <div class="accent-copy">
+    <div class="section-kicker">Reporting baseline</div>
+    <h2>Curated view surfaces are active</h2>
+    <p>Repair rows: {{ reports.repairs }} | Sales rows: {{ reports.sales }} | Inventory alerts: {{ reports.inventory }}</p>
+  </div>
+</section>
+{% endblock %}

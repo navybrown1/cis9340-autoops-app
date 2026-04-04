@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Executive / Reports</div>
+    <h1 class="page-title">Repair reporting</h1>
+    <p class="section-copy">Backlog and completion mix sourced through the approved repair join path: customer -> appointment -> repair.</p>
+  </div>
+</section>
+
+<section class="catalog-layout reveal delay-1">
+  <div class="surface panel catalog-panel">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Repair timeline</div>
+        <h2>Recent repair history</h2>
+      </div>
+      <span class="pill">{{ history_rows|length }} rows</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Repair ID</th>
+            <th>Appointment</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Vehicle</th>
+            <th>Mechanic</th>
+            <th>Status</th>
+            <th>Labor cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in history_rows %}
+            <tr>
+              <td>{{ row.repair_ID }}</td>
+              <td>{{ row.appointment_ID }}</td>
+              <td>{{ row.appointment_date }}</td>
+              <td>{{ row.customer_name }}</td>
+              <td>{{ row.vehicle }}</td>
+              <td>{{ row.mechanic }}</td>
+              <td>{{ row.repair_status }}</td>
+              <td>${{ row.labor_cost }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="8" class="empty-cell">No repair history rows available.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="catalog-rail">
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Status rollup</div>
+          <h2>Current repair states</h2>
+        </div>
+      </div>
+      <div class="insight-list">
+        {% for row in status_rows %}
+          <div class="insight-row">
+            <div class="insight-row-top">
+              <strong>{{ row.status }}</strong>
+              <span>{{ row.repair_count }} repairs</span>
+            </div>
+            <div class="section-meta">Total labor: ${{ row.total_cost }}</div>
+          </div>
+        {% else %}
+          <div class="empty-state">No repair status data available.</div>
+        {% endfor %}
+      </div>
+    </section>
+  </aside>
+</section>
+{% endblock %}

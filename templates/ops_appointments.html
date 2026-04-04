@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Front Desk / Workflow</div>
+    <h1 class="page-title">Appointment scheduling</h1>
+    <p class="section-copy">Schedule appointments and review recent assignment flow across customers, cars, and staff.</p>
+  </div>
+</section>
+
+<section class="catalog-layout reveal delay-1">
+  <div class="surface panel catalog-panel">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Recent appointments</div>
+        <h2>Latest records</h2>
+      </div>
+      <span class="pill">{{ appointments|length }} rows</span>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Type</th>
+            <th>Customer</th>
+            <th>Branch</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in appointments %}
+            <tr>
+              <td>{{ row.appointment_ID }}</td>
+              <td>{{ row.date }}</td>
+              <td>{{ row.time }}</td>
+              <td>{{ row.status }}</td>
+              <td>{{ row.appointment_type }}</td>
+              <td>{{ row.customer_name or row.customer_ID }}</td>
+              <td>{{ row.branch_ID }}</td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="7" class="empty-cell">No appointments found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <aside class="catalog-rail">
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Schedule</div>
+          <h2>Create appointment</h2>
+        </div>
+      </div>
+      {% if not writes_enabled %}
+        <div class="empty-state">Write actions are disabled. Set <code>OPS_WRITE_ENABLED=true</code> to enable scheduling.</div>
+      {% endif %}
+      <form method="post" class="auth-form">
+        <label>
+          <span>Customer</span>
+          <select name="customer_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select customer</option>
+            {% for row in customers %}
+              <option value="{{ row.customer_ID }}">{{ row.customer_ID }} - {{ row.customer_name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Vehicle</span>
+          <select name="car_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select vehicle</option>
+            {% for row in cars %}
+              <option value="{{ row.product_ID }}">{{ row.product_ID }} - {{ row.car_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Branch</span>
+          <select name="branch_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select branch</option>
+            {% for row in branches %}
+              <option value="{{ row.branch_ID }}">{{ row.branch_ID }} - {{ row.address }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>
+          <span>Assigned employee</span>
+          <select name="employee_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select employee</option>
+            {% for row in employees %}
+              <option value="{{ row.employee_ID }}">{{ row.employee_ID }} - {{ row.employee_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label><span>Date</span><input type="date" name="date" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <label><span>Time</span><input type="time" name="time" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <label><span>Type</span><input type="text" name="appointment_type" placeholder="Oil Change" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <label><span>Status</span><input type="text" name="status" value="Scheduled" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <button class="studio-button studio-button-primary" type="submit" {% if not writes_enabled %}disabled{% endif %}>Schedule appointment</button>
+      </form>
+    </section>
+  </aside>
+</section>
+{% endblock %}

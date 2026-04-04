@@ -9,6 +9,7 @@ MySQL-based Flask data studio for the `cis9340_physical_database` project.
 - Runs read-only SQL for safe inspection.
 - Includes a connection settings view for Azure MySQL and local development.
 - Supports local MySQL and Azure Database for MySQL Flexible Server.
+- Supports optional session-based authentication with role-aware navigation.
 
 ## Stack
 
@@ -26,6 +27,9 @@ MySQL-based Flask data studio for the `cis9340_physical_database` project.
 - `templates/` - dashboard, catalog, query lab, table detail, and settings templates
 - `static/styles.css` - app styling
 - `database/mysql/bootstrap_cis9340_physical_database.sql` - clean MySQL bootstrap script
+- `database/mysql/add_users_auth.sql` - additive users table + role seed data
+- `database/mysql/add_business_views.sql` - additive role-oriented business reporting views
+- `docs/baseline-freeze-2026-04-04.md` - frozen baseline inventory before RBAC evolution
 - `.env.example` - environment template
 
 ## Local setup
@@ -60,6 +64,8 @@ Open the URL printed in Terminal.
 Set these in Azure App Service configuration:
 
 - `FLASK_SECRET_KEY`
+- `AUTH_ENABLED`
+- `OPS_WRITE_ENABLED`
 - `MYSQL_HOST`
 - `MYSQL_PORT`
 - `MYSQL_DATABASE`
@@ -72,6 +78,8 @@ Set these in Azure App Service configuration:
 
 Recommended Azure values:
 
+- `AUTH_ENABLED=true` for role-based application mode
+- `OPS_WRITE_ENABLED=false` unless your DB user has controlled write grants
 - `MYSQL_SSL_MODE=REQUIRED`
 - `MYSQL_SSL_CA=`
 - `MYSQL_SERVER_LABEL=Azure MySQL Flexible Server`
@@ -83,7 +91,40 @@ If you want certificate verification instead of required-encryption only, switch
 1. Create the Azure MySQL server and database.
 2. Run the cleaned bootstrap SQL script:
    `database/mysql/bootstrap_cis9340_physical_database.sql`
-3. Verify tables, views, indexes, and seed data.
+3. Run the auth bootstrap script for role-based sign-in:
+   `database/mysql/add_users_auth.sql`
+4. (Optional but recommended) run role-oriented business views pack:
+   `database/mysql/add_business_views.sql`
+5. Verify tables, views, indexes, and seed data.
+
+## Role-based authentication model
+
+- Default auth architecture:
+  - local `users` table in the same MySQL database
+  - hashed passwords
+  - role column (`admin`, `manager`, `frontdesk`, `mechanic`, `analyst`)
+  - session login/logout and route guards in Flask
+- Feature flag:
+  - `AUTH_ENABLED=false` keeps legacy studio behavior (no login required)
+  - `AUTH_ENABLED=true` enables login and role enforcement
+- Operational write flag:
+  - `OPS_WRITE_ENABLED=false` keeps front-desk create/schedule/record forms read-only
+  - `OPS_WRITE_ENABLED=true` enables customer/appointment/sale writes for authorized roles
+- Seed credentials from `add_users_auth.sql` are bootstrap-only and should be rotated.
+
+## Role-based workflow surfaces (current)
+
+- Admin studio:
+  - `/studio/dashboard`, `/studio/catalog`, `/studio/query`, `/studio/settings`
+- Operational:
+  - `/ops/dashboard`
+  - `/ops/customers` (search + optional create)
+  - `/ops/appointments` (review + optional scheduling)
+  - `/ops/repairs` (queue + optional create/update)
+  - `/ops/sales` (review + optional record)
+  - `/ops/inventory` (branch/filter view)
+- Executive/reporting:
+  - `/reports/overview`, `/reports/branches`, `/reports/repairs`, `/reports/sales`, `/reports/inventory-alerts`
 
 ## GitHub deployment
 
@@ -92,9 +133,15 @@ The repository is ready for GitHub-based source control and Azure deployment.
 If you use GitHub Actions, create these secrets:
 
 - `AZURE_WEBAPP_NAME`
-- `AZURE_WEBAPP_PUBLISH_PROFILE`
+- `AZURE_CREDENTIALS`
 
 The workflow should deploy the repo root to Azure App Service.
+The active workflow in this repo uses `azure/login@v2` with `AZURE_CREDENTIALS`, then `azure/webapps-deploy@v3` with `AZURE_WEBAPP_NAME`.
+
+## Baseline freeze documentation
+
+- Current frozen baseline inventory: `docs/baseline-freeze-2026-04-04.md`
+- Use this document to separate stable baseline behavior from phased role-based changes.
 
 ## Read-only policy
 

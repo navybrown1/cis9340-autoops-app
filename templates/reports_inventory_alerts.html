@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Executive / Reports</div>
+    <h1 class="page-title">Inventory alerts</h1>
+    <p class="section-copy">Low-stock and reorder risk view derived from `vw_branch_inventory` to support branch planning.</p>
+  </div>
+</section>
+
+<section class="surface panel reveal delay-1">
+  <div class="section-head">
+    <div>
+      <div class="section-kicker">Reorder watchlist</div>
+      <h2>Products below threshold</h2>
+    </div>
+    <span class="pill">{{ alert_rows|length }} alerts</span>
+  </div>
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Branch</th>
+          <th>Address</th>
+          <th>Product</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Qty</th>
+          <th>Reorder level</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in alert_rows %}
+          <tr>
+            <td>{{ row.branch_ID }}</td>
+            <td>{{ row.branch_address }}</td>
+            <td>{{ row.product_ID }}</td>
+            <td>{{ row.product_type }}</td>
+            <td>{{ row.description }}</td>
+            <td>{{ row.quantity_in_inventory }}</td>
+            <td>{{ row.reorder_level }}</td>
+            <td>{{ row.stock_status }}</td>
+          </tr>
+        {% else %}
+          <tr>
+            <td colspan="8" class="empty-cell">No active reorder alerts found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
