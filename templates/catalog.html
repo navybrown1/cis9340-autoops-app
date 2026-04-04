@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Explorer / Catalog</div>
+    <h1 class="page-title">Object catalog</h1>
+    <p class="section-copy">Browse every table and view in <strong>{{ database_name }}</strong>. The list is live and reflects the current Azure MySQL schema.</p>
+  </div>
+  <div class="page-hero-stats">
+    <article class="hero-stat">
+      <span>Objects</span>
+      <strong>{{ stats.objects }}</strong>
+    </article>
+    <article class="hero-stat">
+      <span>Tables</span>
+      <strong>{{ stats.tables }}</strong>
+    </article>
+    <article class="hero-stat">
+      <span>Views</span>
+      <strong>{{ stats.views }}</strong>
+    </article>
+    <article class="hero-stat">
+      <span>Rows</span>
+      <strong>{{ stats.rows }}</strong>
+    </article>
+  </div>
+</section>
+
+<section class="catalog-layout reveal delay-1">
+  <div class="surface panel catalog-panel">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Live catalog</div>
+        <h2>Tables and views</h2>
+      </div>
+      <span class="pill">{{ catalog|length }} results</span>
+    </div>
+
+    <div class="catalog-list">
+      {% for item in catalog %}
+        <a class="catalog-row" href="{{ url_for('object_view', object_name=item.table_name) }}">
+          <div class="catalog-row-main">
+            <div class="catalog-row-title">{{ item.display_name }}</div>
+            <div class="catalog-row-meta">{{ item.table_name }} · {{ item.column_count }} columns</div>
+          </div>
+          <div class="catalog-row-side">
+            <span class="kind-chip {{ 'view' if item.table_type == 'VIEW' else 'table' }}">{{ item.kind_label }}</span>
+            <span class="row-count">{{ item.row_count }} rows</span>
+          </div>
+        </a>
+      {% else %}
+        <div class="empty-state">No objects matched your search.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <aside class="catalog-rail">
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Top tables</div>
+          <h2>Largest objects</h2>
+        </div>
+      </div>
+
+      <div class="insight-list">
+        {% for item in spotlight.top_tables %}
+          <div class="insight-row">
+            <div class="insight-row-top">
+              <strong>{{ item.display_name }}</strong>
+              <span>{{ item.row_count }} rows</span>
+            </div>
+            <div class="meter">
+              <span style="width: {{ ((item.row_count / spotlight.table_row_max) * 100) if spotlight.table_row_max else 0 }}%"></span>
+            </div>
+          </div>
+        {% else %}
+          <div class="empty-state">No tables available.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="surface panel">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Quick access</div>
+          <h2>Open important pages</h2>
+        </div>
+      </div>
+      <div class="action-list">
+        <a class="action-card" href="{{ url_for('query_lab') }}">
+          <div class="action-card-copy">
+            <span class="material-symbols-outlined">terminal</span>
+            <div>
+              <strong>Query Lab</strong>
+              <span>Run read-only SQL</span>
+            </div>
+          </div>
+          <span class="material-symbols-outlined">arrow_forward_ios</span>
+        </a>
+        <a class="action-card" href="{{ url_for('settings') }}">
+          <div class="action-card-copy">
+            <span class="material-symbols-outlined">settings</span>
+            <div>
+              <strong>Connection Settings</strong>
+              <span>Review Azure MySQL access</span>
+            </div>
+          </div>
+          <span class="material-symbols-outlined">arrow_forward_ios</span>
+        </a>
+      </div>
+    </section>
+  </aside>
+</section>
+{% endblock %}

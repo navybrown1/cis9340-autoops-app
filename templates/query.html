@@ -1,112 +1,227 @@
 {% extends 'base.html' %}
 {% block content %}
-<section class="query-layout reveal">
-  <div class="surface query-panel">
-    <div class="section-head">
+<section class="query-shell reveal">
+  <aside class="surface schema-rail">
+    <div class="rail-head">
       <div>
-        <p class="section-kicker">Query lab</p>
-        <h2>Run safe read-only SQL</h2>
+        <div class="section-kicker">Schema Browser</div>
+        <h2>Objects</h2>
       </div>
-      <span class="pill">Read only</span>
+      <span class="rail-refresh material-symbols-outlined">refresh</span>
     </div>
 
-    <p class="section-copy">Use SELECT, SHOW, DESCRIBE, EXPLAIN, or WITH statements to inspect the database without changing data.</p>
+    <div class="schema-tree">
+      <details class="schema-group" open>
+        <summary>
+          <span class="material-symbols-outlined">storage</span>
+          <strong>{{ database_name }}</strong>
+        </summary>
+        <div class="schema-group-body">
+          {% for item in catalog[:8] %}
+            <details class="schema-object" {% if loop.first %}open{% endif %}>
+              <summary>
+                <span class="material-symbols-outlined">{{ 'table_view' if item.table_type == 'BASE TABLE' else 'insert_chart' }}</span>
+                <span>{{ item.display_name }}</span>
+              </summary>
+              <div class="schema-columns">
+                {% for column in item.columns[:5] %}
+                  <div class="schema-column">
+                    <div class="schema-column-top">
+                      <strong>{{ column.column_name }}</strong>
+                      {% if column.column_key %}<span>{{ column.column_key }}</span>{% endif %}
+                    </div>
+                    <div class="schema-column-meta">
+                      <span>{{ column.column_type }}</span>
+                      <span>{{ column.is_nullable }}</span>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </details>
+          {% endfor %}
+        </div>
+      </details>
 
-    <div class="query-guides">
-      <div class="query-guide">
-        <span>Safe</span>
-        <strong>No writes</strong>
+      <details class="schema-group" open>
+        <summary>
+          <span class="material-symbols-outlined">folder_special</span>
+          <strong>Saved Queries</strong>
+        </summary>
+        <div class="schema-group-body">
+          {% for sample in samples %}
+            <a class="saved-query" href="{{ url_for('query_lab', sql=sample.sql) }}">
+              <span class="material-symbols-outlined">description</span>
+              <span>{{ sample.label }}</span>
+            </a>
+          {% endfor %}
+        </div>
+      </details>
+    </div>
+  </aside>
+
+  <section class="surface query-center">
+    <div class="query-toolbar">
+      <div class="query-toolbar-actions">
+        <button class="studio-button studio-button-primary" type="submit" form="query-form">
+          <span class="material-symbols-outlined">play_arrow</span>
+          <span>Run Query</span>
+        </button>
+        <button class="toolbar-button" type="button">Save</button>
+        <button class="toolbar-button" type="button">Format SQL</button>
+        <button class="toolbar-button" type="button">History</button>
       </div>
-      <div class="query-guide">
-        <span>Fast check</span>
-        <strong>LIMIT 5</strong>
-      </div>
-      <div class="query-guide">
-        <span>Best for</span>
-        <strong>Spot checks</strong>
+      <div class="query-toolbar-status">
+        <div class="status-chip status-chip-active">CONNECTED</div>
+        <div class="engine-label">{{ query_metrics.engine }}</div>
       </div>
     </div>
 
-    <form method="post" class="query-form">
-      <label for="sql" class="form-label">SQL</label>
-      <textarea id="sql" name="sql" class="query-textarea" spellcheck="false">{{ sql_text }}</textarea>
-      <div class="action-row">
-        <button type="submit" class="btn btn-primary btn-lg">Run query</button>
+    <form id="query-form" method="post" class="query-editor-form">
+      <div class="editor-shell">
+        <div class="editor-gutter" aria-hidden="true">
+          {% for _ in range(1, 13) %}
+            <span>{{ loop.index }}</span>
+          {% endfor %}
+        </div>
+        <textarea id="sql" name="sql" class="sql-editor" spellcheck="false">{{ sql_text }}</textarea>
+      </div>
+      <div class="query-helper-row">
+        <span>Read only</span>
+        <span>{{ connection_target }}</span>
+        <span>{{ database_name }}</span>
       </div>
     </form>
 
-    <div class="sample-query-row">
-      {% for sample in samples %}
-        <a class="sample-query" href="{{ url_for('query_lab', sql=sample.sql) }}">{{ sample.label }}</a>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="surface result-panel">
-    <div class="section-head">
-      <div>
-        <p class="section-kicker">Result set</p>
-        <h2>Output</h2>
+    <div class="results-panel">
+      <div class="results-head">
+        <div>
+          <div class="section-kicker">Query Results</div>
+          <h3>Output</h3>
+        </div>
+        {% if result %}
+          <div class="results-meta">
+            <span>{{ result.row_count }} rows</span>
+            {% if elapsed_ms is not none %}<span>{{ elapsed_ms }} ms</span>{% endif %}
+            <span>{{ result.columns|length }} columns</span>
+          </div>
+        {% endif %}
       </div>
+
+      {% if executed_sql %}
+        <div class="result-sql"><code>{{ executed_sql }}</code></div>
+      {% endif %}
+
       {% if result %}
-        <div class="pagination-meta">
-          <span>{{ result.row_count }} rows</span>
-          {% if elapsed_ms is not none %}<span>{{ elapsed_ms }} ms</span>{% endif %}
+        <div class="results-summary">
+          <article class="summary-card">
+            <span>Rows returned</span>
+            <strong>{{ result.row_count }}</strong>
+          </article>
+          <article class="summary-card">
+            <span>Columns</span>
+            <strong>{{ result.columns|length }}</strong>
+          </article>
+          <article class="summary-card">
+            <span>Execution time</span>
+            <strong>{% if elapsed_ms is not none %}{{ elapsed_ms }} ms{% else %}n/a{% endif %}</strong>
+          </article>
+        </div>
+
+        <div class="table-scroll query-results-scroll">
+          <table class="data-table data-table-large">
+            <thead>
+              <tr>
+                {% for column in result.columns %}
+                  <th>{{ column }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in result.rows %}
+                <tr>
+                  {% for column in result.columns %}
+                    <td>{{ row[column] }}</td>
+                  {% endfor %}
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="{{ result.columns|length or 1 }}" class="empty-cell">Query returned no rows.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state large">
+          Run a query to inspect rows and schema details here.
         </div>
       {% endif %}
     </div>
+  </section>
 
-    {% if executed_sql %}
-      <div class="result-sql"><code>{{ executed_sql }}</code></div>
-    {% endif %}
-
-    {% if result %}
-      <div class="result-summary-grid">
-        <div class="result-summary-card">
-          <span>Rows returned</span>
-          <strong>{{ result.row_count }}</strong>
-        </div>
-        <div class="result-summary-card">
-          <span>Columns</span>
-          <strong>{{ result.columns|length }}</strong>
-        </div>
-        <div class="result-summary-card">
+  <aside class="surface query-rail">
+    <section class="rail-block">
+      <div class="rail-title">Performance Insights</div>
+      <div class="insight-grid">
+        <article class="insight-card insight-card-primary">
           <span>Execution time</span>
-          <strong>{% if elapsed_ms is not none %}{{ elapsed_ms }} ms{% else %}n/a{% endif %}</strong>
+          <strong>{% if query_metrics.elapsed_ms is not none %}{{ query_metrics.elapsed_ms }} ms{% else %}n/a{% endif %}</strong>
+          <small>{% if query_metrics.rows %}{{ query_metrics.rows }} rows returned{% else %}Awaiting query{% endif %}</small>
+        </article>
+        <div class="two-up-grid">
+          <article class="insight-card">
+            <span>Rows returned</span>
+            <strong>{{ query_metrics.rows }}</strong>
+          </article>
+          <article class="insight-card">
+            <span>Columns</span>
+            <strong>{{ query_metrics.columns }}</strong>
+          </article>
         </div>
       </div>
-    {% endif %}
+    </section>
 
-    {% if result %}
-      <div class="table-scroll">
-        <table class="data-table data-table-large">
-          <thead>
-            <tr>
-              {% for column in result.columns %}
-                <th>{{ column }}</th>
-              {% endfor %}
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in result.rows %}
-              <tr>
-                {% for column in result.columns %}
-                  <td>{{ row[column] }}</td>
-                {% endfor %}
-              </tr>
-            {% else %}
-              <tr>
-                <td colspan="{{ result.columns|length or 1 }}" class="empty-cell">Query returned no rows.</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+    <section class="rail-block">
+      <div class="rail-title">Query Quality</div>
+      <article class="quality-card">
+        <div class="quality-card-head">
+          <span class="material-symbols-outlined">lightbulb</span>
+          <strong>Optimization Tip</strong>
+        </div>
+        <p>{{ query_tip }}</p>
+      </article>
+    </section>
+
+    <section class="rail-block">
+      <div class="rail-title">Active Connections</div>
+      <div class="avatar-row">
+        {% for connection in active_connections %}
+          <div class="avatar-stack-item" title="{{ connection.name }}">
+            <span>{{ connection.name[0] }}</span>
+          </div>
+        {% endfor %}
+        <div class="avatar-stack-item avatar-stack-more">+{{ active_connections|length }}</div>
       </div>
-    {% else %}
-      <div class="empty-state large">
-        Run a query to inspect rows and schema details here.
-      </div>
-    {% endif %}
-  </div>
+      <p class="rail-note">Currently viewing this query lab against {{ connection_target }}.</p>
+    </section>
+  </aside>
 </section>
+
+<footer class="query-footer">
+  <div class="footer-metrics">
+    <span>Ln 12, Col 45</span>
+    <span>UTF-8</span>
+    <span>{{ server_label }}</span>
+  </div>
+  <div class="footer-metrics">
+    <span class="status-chip status-chip-connected">All changes saved</span>
+    <span>v2.4-studio</span>
+  </div>
+</footer>
+
+<div class="sample-query-row">
+  {% for sample in samples %}
+    <a class="sample-query" href="{{ url_for('query_lab', sql=sample.sql) }}">{{ sample.label }}</a>
+  {% endfor %}
+</div>
 {% endblock %}

@@ -7,6 +7,7 @@ MySQL-based Flask data studio for the `cis9340_physical_database` project.
 - Shows a live dashboard for the database catalog.
 - Browses tables and views with pagination.
 - Runs read-only SQL for safe inspection.
+- Includes a connection settings view for Azure MySQL and local development.
 - Supports local MySQL and Azure Database for MySQL Flexible Server.
 
 ## Stack
@@ -22,7 +23,7 @@ MySQL-based Flask data studio for the `cis9340_physical_database` project.
 - `run.py` - local development entrypoint
 - `application.py` - Azure App Service entrypoint
 - `db_portal.py` - Flask + MySQL portal logic
-- `templates/` - UI templates
+- `templates/` - dashboard, catalog, query lab, table detail, and settings templates
 - `static/styles.css` - app styling
 - `database/mysql/bootstrap_cis9340_physical_database.sql` - clean MySQL bootstrap script
 - `.env.example` - environment template

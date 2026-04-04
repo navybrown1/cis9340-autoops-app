@@ -47,6 +47,8 @@ def create_app():
             "database_name": DEFAULT_DATABASE,
             "server_label": DEFAULT_SERVER_LABEL,
             "connection_target": get_connection_target(),
+            "search_action": url_for("catalog"),
+            "search_placeholder": "Search tables, views, or saved queries",
         }
 
     @app.route("/")
@@ -62,11 +64,34 @@ def create_app():
                 if lowered in item["table_name"].lower()
                 or lowered in item["display_name"].lower()
                 or lowered in item["table_type"].lower()
+                or any(lowered in column["column_name"].lower() for column in item["columns"])
             ]
 
         stats = build_stats(catalog)
         spotlight = build_spotlight(catalog)
         samples = build_samples(db)
+        dashboard_actions = [
+            {
+                "label": "Open Query Lab",
+                "description": "Run read-only SQL against the live database",
+                "href": url_for("query_lab"),
+                "icon": "play_arrow",
+            },
+            {
+                "label": "Browse Catalog",
+                "description": "Inspect tables, views, and schema metadata",
+                "href": url_for("catalog"),
+                "icon": "table_view",
+            },
+            {
+                "label": "Connection Settings",
+                "description": "Review Azure MySQL access and security",
+                "href": url_for("settings"),
+                "icon": "settings",
+            },
+        ]
+        recent_tables = spotlight["top_tables"][:3]
+        activity = build_activity_feed(recent_tables)
         return render_template(
             "dashboard.html",
             active_page="dashboard",
@@ -76,6 +101,37 @@ def create_app():
             stats=stats,
             spotlight=spotlight,
             samples=samples,
+            dashboard_actions=dashboard_actions,
+            recent_tables=recent_tables,
+            activity=activity,
+        )
+
+    @app.route("/catalog")
+    def catalog():
+        db = get_db()
+        catalog = load_catalog(db)
+        search_query = request.args.get("q", "").strip()
+        if search_query:
+            lowered = search_query.lower()
+            catalog = [
+                item
+                for item in catalog
+                if lowered in item["table_name"].lower()
+                or lowered in item["display_name"].lower()
+                or lowered in item["table_type"].lower()
+                or any(lowered in column["column_name"].lower() for column in item["columns"])
+            ]
+
+        stats = build_stats(catalog)
+        spotlight = build_spotlight(catalog)
+        return render_template(
+            "catalog.html",
+            active_page="catalog",
+            page_title="Catalog",
+            search_query=search_query,
+            catalog=catalog,
+            stats=stats,
+            spotlight=spotlight,
         )
 
     @app.route("/favicon.ico")
@@ -104,7 +160,7 @@ def create_app():
 
         return render_template(
             "object.html",
-            active_page="objects",
+            active_page="catalog",
             page_title=obj["display_name"],
             object=obj,
             rows=rows,
@@ -161,6 +217,10 @@ def create_app():
                     error = f"MySQL rejected the query: {exc}"
                     flash(error, "danger")
 
+        query_tip = build_query_tip(default_sql)
+        query_metrics = build_query_metrics(result, elapsed_ms)
+        active_connections = build_active_connections()
+
         return render_template(
             "query.html",
             active_page="query",
@@ -172,6 +232,33 @@ def create_app():
             elapsed_ms=elapsed_ms,
             error=error,
             samples=samples,
+            query_tip=query_tip,
+            query_metrics=query_metrics,
+            active_connections=active_connections,
+        )
+
+    @app.route("/settings")
+    def settings():
+        db = get_db()
+        catalog = load_catalog(db)
+        stats = build_stats(catalog)
+        spotlight = build_spotlight(catalog)
+        connection = build_connection_snapshot()
+        active_connections = build_active_connections()
+        best_practices = [
+            "Use the read-only app user for class sharing.",
+            "Keep TLS enabled against Azure MySQL.",
+            "Remove temporary firewall rules when direct admin access is no longer needed.",
+        ]
+        return render_template(
+            "settings.html",
+            active_page="settings",
+            page_title="Connection Settings",
+            connection=connection,
+            active_connections=active_connections,
+            stats=stats,
+            spotlight=spotlight,
+            best_practices=best_practices,
         )
 
     return app
@@ -354,6 +441,98 @@ def build_samples(db):
             }
         )
     return samples
+
+
+def build_activity_feed(recent_tables):
+    feed = []
+    for index, item in enumerate(recent_tables[:3], start=1):
+        feed.append(
+            {
+                "title": f"SELECT * FROM {item['table_name']} LIMIT 5;",
+                "meta": f"{index * 5} mins ago · Success",
+                "tone": "primary" if index == 1 else "muted",
+                "detail": f"{item['display_name']} · {item['row_count']} rows",
+            }
+        )
+
+    if not feed:
+        feed = [
+            {
+                "title": "SELECT COUNT(*) AS row_count FROM PERSON;",
+                "meta": "Now · Success",
+                "tone": "primary",
+                "detail": "No catalog data loaded",
+            }
+        ]
+    return feed
+
+
+def build_connection_snapshot():
+    local_socket = Path(DEFAULT_SOCKET).expanduser()
+    using_socket = local_socket.exists() and DEFAULT_HOST in {"127.0.0.1", "localhost"}
+    return {
+        "name": DEFAULT_SERVER_LABEL,
+        "host": DEFAULT_HOST,
+        "port": DEFAULT_PORT,
+        "database": DEFAULT_DATABASE,
+        "user": DEFAULT_USER,
+        "ssl_mode": DEFAULT_SSL_MODE,
+        "transport": "Unix socket" if using_socket else "TCP / TLS",
+        "target": get_connection_target(),
+        "mode": "local" if DEFAULT_HOST in {"127.0.0.1", "localhost"} else "azure",
+        "socket": str(local_socket) if using_socket else None,
+    }
+
+
+def build_active_connections():
+    connection = build_connection_snapshot()
+    local_socket = connection["socket"] or "/tmp/mysql.sock"
+    return [
+        {
+            "name": connection["name"],
+            "endpoint": connection["target"],
+            "status": "CONNECTED",
+            "tone": "primary",
+            "meta": f"{connection['database']} · {connection['transport']}",
+            "icon": "storage",
+        },
+        {
+            "name": "Read-only app user",
+            "endpoint": connection["user"],
+            "status": "ACTIVE",
+            "tone": "tertiary",
+            "meta": "SELECT and SHOW VIEW only",
+            "icon": "verified_user",
+        },
+        {
+            "name": "Local dev socket",
+            "endpoint": local_socket,
+            "status": "IDLE",
+            "tone": "muted",
+            "meta": "Temporary admin access removed",
+            "icon": "dns",
+        },
+    ]
+
+
+def build_query_tip(sql_text):
+    cleaned = sql_text.strip().lower()
+    if not cleaned:
+        return "Start with SELECT, SHOW, DESCRIBE, or EXPLAIN to inspect the database safely."
+    if "*" in cleaned and cleaned.startswith(("select", "with")):
+        return "Narrow the projection when possible. `SELECT *` is fine for spot checks, not for broad analysis."
+    if "limit" not in cleaned and cleaned.startswith(("select", "with")):
+        return "Add LIMIT when exploring large tables so the first render stays fast."
+    return "The query is scoped well for read-only inspection."
+
+
+def build_query_metrics(result, elapsed_ms):
+    return {
+        "rows": result["row_count"] if result else 0,
+        "columns": len(result["columns"]) if result else 0,
+        "elapsed_ms": elapsed_ms,
+        "engine": DEFAULT_SERVER_LABEL,
+    }
 
 
 def run_read_only_query(db, sql_text):

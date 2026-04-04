@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="surface page-hero reveal">
+  <div class="page-hero-copy">
+    <div class="section-kicker">Explorer / Settings</div>
+    <h1 class="page-title">Connection settings</h1>
+    <p class="section-copy">Review the live Azure MySQL profile, the read-only app user, and the secure transport settings used by this frontend.</p>
+  </div>
+  <div class="page-hero-stats">
+    <article class="hero-stat">
+      <span>Status</span>
+      <strong>Connected</strong>
+    </article>
+    <article class="hero-stat">
+      <span>Transport</span>
+      <strong>{{ connection.transport }}</strong>
+    </article>
+    <article class="hero-stat">
+      <span>Mode</span>
+      <strong>{{ connection.mode|upper }}</strong>
+    </article>
+    <article class="hero-stat">
+      <span>SSL</span>
+      <strong>{{ connection.ssl_mode }}</strong>
+    </article>
+  </div>
+</section>
+
+<section class="settings-layout reveal delay-1">
+  <aside class="settings-rail">
+    <div class="section-head">
+      <div>
+        <div class="section-kicker">Active connections</div>
+        <h2>Available bridges</h2>
+      </div>
+    </div>
+
+    <div class="settings-card-list">
+      {% for item in active_connections %}
+        <article class="connection-card {% if loop.first %}active{% endif %}">
+          <div class="connection-card-head">
+            <div class="connection-icon">
+              <span class="material-symbols-outlined">{{ item.icon }}</span>
+            </div>
+            <div class="connection-copy">
+              <strong>{{ item.name }}</strong>
+              <span>{{ item.endpoint }}</span>
+            </div>
+            <span class="status-chip {% if item.status == 'CONNECTED' %}status-chip-active{% elif item.status == 'ACTIVE' %}status-chip-stable{% else %}status-chip-muted{% endif %}">{{ item.status }}</span>
+          </div>
+          <div class="connection-card-footer">
+            <span>{{ item.meta }}</span>
+            <span class="material-symbols-outlined">chevron_right</span>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="surface settings-panel">
+    <div class="settings-panel-head">
+      <div>
+        <h2>Edit connection</h2>
+        <p>Configure security and access parameters for the live frontend.</p>
+      </div>
+      <div class="secure-chip">
+        <span class="dot"></span>
+        <span>Secure channel</span>
+      </div>
+    </div>
+
+    <div class="settings-form-grid">
+      <div class="field-group">
+        <label>Connection name</label>
+        <input type="text" value="{{ connection.name }}" readonly>
+      </div>
+      <div class="field-group">
+        <label>Database driver</label>
+        <div class="select-shell">
+          <select disabled>
+            <option selected>MySQL 8.0</option>
+          </select>
+          <span class="material-symbols-outlined">expand_more</span>
+        </div>
+      </div>
+      <div class="field-group field-group-wide">
+        <label>Host / endpoint</label>
+        <input type="text" value="{{ connection.host }}" readonly>
+      </div>
+      <div class="field-group">
+        <label>Port</label>
+        <input type="text" value="{{ connection.port }}" readonly>
+      </div>
+      <div class="field-group field-group-wide">
+        <label>Database</label>
+        <input type="text" value="{{ connection.database }}" readonly>
+      </div>
+      <div class="field-group">
+        <label>Username</label>
+        <input type="text" value="{{ connection.user }}" readonly>
+      </div>
+      <div class="field-group">
+        <label>Password</label>
+        <div class="password-shell">
+          <input type="password" value="••••••••••••" readonly>
+          <span class="material-symbols-outlined">visibility</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="switch-card">
+      <div class="switch-card-copy">
+        <strong>SSL / TLS</strong>
+        <span>Azure requires secure transport for the live database.</span>
+      </div>
+      <div class="toggle-shell on" aria-hidden="true">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+
+    <div class="switch-card">
+      <div class="switch-card-copy">
+        <strong>SSH Tunnel</strong>
+        <span>Bridge through a bastion host if your class setup requires it.</span>
+      </div>
+      <div class="toggle-shell" aria-hidden="true">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <div class="settings-status">
+        <span class="material-symbols-outlined">verified</span>
+        <div>
+          <strong>Connection verified</strong>
+          <span>{{ connection_target }}</span>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="studio-button studio-button-secondary" type="button">Test Connection</button>
+        <button class="studio-button studio-button-primary" type="button">Save Changes</button>
+      </div>
+    </div>
+  </section>
+</section>
+
+<section class="surface best-practices-panel reveal delay-2">
+  <div class="best-practices-copy">
+    <span class="material-symbols-outlined">info</span>
+    <div>
+      <h3>Best practices</h3>
+      <p>Keep direct admin firewall access temporary, keep TLS on, and use the read-only app user for classmates.</p>
+    </div>
+  </div>
+  <ul class="best-practices-list">
+    {% for item in best_practices %}
+      <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

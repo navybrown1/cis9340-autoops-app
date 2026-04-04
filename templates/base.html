@@ -6,58 +6,92 @@
   <title>{{ page_title or 'CIS 9340 Data Studio' }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
   <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet">
 </head>
 <body data-page="{{ active_page or '' }}">
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand-lockup">
-        <div class="brand-mark">
+        <div class="brand-mark" aria-hidden="true">
           <span></span>
           <span></span>
           <span></span>
         </div>
         <div>
-          <div class="brand-name">CIS 9340 Data Studio</div>
+          <div class="brand-name">CIS 9340</div>
+          <div class="brand-subtitle">Data Studio</div>
         </div>
       </div>
 
-      <div class="status-card">
-        <div class="status-label">Connection</div>
-        <div class="status-value">{{ connection_target }}</div>
-        <div class="status-meta">{{ database_name }}</div>
-      </div>
+      <a class="sidebar-cta" href="{{ url_for('query_lab') }}">
+        <span class="material-symbols-outlined">add</span>
+        <span>New Query</span>
+      </a>
 
-      <nav class="app-nav" aria-label="Primary">
-        <a class="app-nav-link {{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
-          <span>Overview</span>
-          <small>Catalog and live samples</small>
+      <nav class="sidebar-nav" aria-label="Primary">
+        <a class="sidebar-link {{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Dashboard</span>
         </a>
-        <a class="app-nav-link {{ 'active' if active_page == 'query' else '' }}" href="{{ url_for('query_lab') }}">
+        <a class="sidebar-link {{ 'active' if active_page == 'catalog' else '' }}" href="{{ url_for('catalog') }}">
+          <span class="material-symbols-outlined">table_view</span>
+          <span>Catalog</span>
+        </a>
+        <a class="sidebar-link {{ 'active' if active_page == 'query' else '' }}" href="{{ url_for('query_lab') }}">
+          <span class="material-symbols-outlined">terminal</span>
           <span>Query Lab</span>
-          <small>Read-only SQL explorer</small>
+        </a>
+        <a class="sidebar-link {{ 'active' if active_page == 'settings' else '' }}" href="{{ url_for('settings') }}">
+          <span class="material-symbols-outlined">settings</span>
+          <span>Settings</span>
         </a>
       </nav>
 
-      <div class="sidebar-note">
-        Browse tables, open views, and inspect rows without leaving the browser.
+      <div class="sidebar-spacer"></div>
+
+      <div class="workspace-card">
+        <div class="workspace-card-avatar">EB</div>
+        <div class="workspace-card-copy">
+          <strong>Edwin Brown</strong>
+          <span>{{ server_label }}</span>
+          <small>{{ connection_target }}</small>
+        </div>
       </div>
     </aside>
 
     <main class="workspace">
-      <header class="workspace-topbar">
-        <div class="workspace-title-group">
-          <p class="eyebrow">{{ server_label }}</p>
-          <h1>{{ page_title or 'Overview' }}</h1>
-          <p class="title-subline">{{ database_name }}</p>
-        </div>
-        <form class="object-search" action="{{ url_for('dashboard') }}" method="get">
-          <label class="sr-only" for="object-search">Find an object</label>
-          <input id="object-search" name="q" value="{{ search_query or '' }}" type="search" placeholder="Find a table or view">
-          <button type="submit">Search</button>
+      <header class="topbar">
+        <form class="global-search" action="{{ search_action or url_for('catalog') }}" method="get">
+          <span class="material-symbols-outlined">search</span>
+          <input
+            id="global-search"
+            name="q"
+            value="{{ search_query or '' }}"
+            type="search"
+            placeholder="{{ search_placeholder or 'Search tables, views, or saved queries' }}"
+            autocomplete="off"
+          >
         </form>
+
+        <div class="topbar-center">
+          <a class="topbar-tab {{ 'active' if active_page in ['dashboard', 'catalog', 'settings'] else '' }}" href="{{ url_for('catalog') }}">Explorer</a>
+          <a class="topbar-tab {{ 'active' if active_page == 'query' else '' }}" href="{{ url_for('query_lab') }}">Logs</a>
+        </div>
+
+        <div class="topbar-actions" aria-label="Status and shortcuts">
+          <button class="icon-button" type="button" aria-label="Notifications">
+            <span class="material-symbols-outlined">notifications</span>
+          </button>
+          <button class="icon-button" type="button" aria-label="Help">
+            <span class="material-symbols-outlined">help_outline</span>
+          </button>
+          <div class="avatar-chip" aria-label="Workspace avatar">
+            <span class="avatar-dot"></span>
+            <span>EB</span>
+          </div>
+        </div>
       </header>
 
       <div class="workspace-body">
@@ -65,7 +99,7 @@
           {% if messages %}
             <div class="flash-stack">
               {% for category, msg in messages %}
-                <div class="alert alert-{{ category }} flash-banner" role="alert">{{ msg }}</div>
+                <div class="flash-banner flash-{{ category }}" role="alert">{{ msg }}</div>
               {% endfor %}
             </div>
           {% endif %}
