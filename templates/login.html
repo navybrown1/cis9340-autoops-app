@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <section class="auth-wrap reveal">
-  <article class="surface auth-card">
+  <article class="surface auth-card panel">
     <div class="section-kicker">CIS9340 / AutoOps</div>
     <h1 class="page-title">Sign in</h1>
     <p class="section-copy">Sign in with your role account to access operational and technical surfaces.</p>
@@ -22,9 +22,11 @@
       </button>
     </form>
 
-    <div class="auth-note">
-      Use credentials seeded in <code>database/mysql/add_users_auth.sql</code>.
-    </div>
+    <p class="auth-note">
+      Role accounts are created by the SQL bootstrap
+      <code>add_users_auth.sql</code> (under <code>database/mysql/</code>).
+      Rotate passwords after first sign-in.
+    </p>
   </article>
 </section>
 {% endblock %}
