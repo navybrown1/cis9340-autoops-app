@@ -30,8 +30,8 @@
   <aside class="settings-rail">
     <div class="section-head">
       <div>
-        <div class="section-kicker">Active connections</div>
-        <h2>Available bridges</h2>
+        <div class="section-kicker">Connection facts</div>
+        <h2>Live profile</h2>
       </div>
     </div>
 
@@ -46,11 +46,10 @@
               <strong>{{ item.name }}</strong>
               <span>{{ item.endpoint }}</span>
             </div>
-            <span class="status-chip {% if item.status == 'CONNECTED' %}status-chip-active{% elif item.status == 'ACTIVE' %}status-chip-stable{% else %}status-chip-muted{% endif %}">{{ item.status }}</span>
           </div>
           <div class="connection-card-footer">
             <span>{{ item.meta }}</span>
-            <span class="material-symbols-outlined">chevron_right</span>
+            <strong>{{ item.status }}</strong>
           </div>
         </article>
       {% endfor %}
@@ -60,72 +59,57 @@
   <section class="surface settings-panel">
     <div class="settings-panel-head">
       <div>
-        <h2>Edit connection</h2>
-        <p>Configure security and access parameters for the live frontend.</p>
+        <h2>Connection profile</h2>
+        <p>This frontend is read-only. The values below describe the live Azure profile currently used by the app.</p>
       </div>
-      <div class="secure-chip">
-        <span class="dot"></span>
-        <span>Secure channel</span>
+      <div class="section-meta">
+        Secure transport
       </div>
     </div>
 
-    <div class="settings-form-grid">
-      <div class="field-group">
-        <label>Connection name</label>
-        <input type="text" value="{{ connection.name }}" readonly>
-      </div>
-      <div class="field-group">
-        <label>Database driver</label>
-        <div class="select-shell">
-          <select disabled>
-            <option selected>MySQL 8.0</option>
-          </select>
-          <span class="material-symbols-outlined">expand_more</span>
+    <div class="settings-info-grid">
+      <article class="info-card">
+        <span>Connection name</span>
+        <strong>{{ connection.name }}</strong>
+        <small>Configured in Azure App Service</small>
+      </article>
+      <article class="info-card">
+        <span>Database engine</span>
+        <strong>MySQL 8.x</strong>
+        <small>{{ connection.transport }}</small>
+      </article>
+      <article class="info-card info-card-wide">
+        <span>Host / endpoint</span>
+        <strong>{{ connection.host }}</strong>
+        <small>{{ connection.port }} · {{ connection.database }}</small>
+      </article>
+      <article class="info-card">
+        <span>App user</span>
+        <strong>{{ connection.user }}</strong>
+        <small>Read-only access</small>
+      </article>
+      <article class="info-card">
+        <span>SSL mode</span>
+        <strong>{{ connection.ssl_mode }}</strong>
+        <small>Required by Azure MySQL</small>
+      </article>
+    </div>
+
+    <div class="fact-list settings-facts">
+      <article class="fact-item">
+        <div>
+          <strong>Access model</strong>
+          <span>Application traffic uses the Azure-hosted read-only account.</span>
         </div>
-      </div>
-      <div class="field-group field-group-wide">
-        <label>Host / endpoint</label>
-        <input type="text" value="{{ connection.host }}" readonly>
-      </div>
-      <div class="field-group">
-        <label>Port</label>
-        <input type="text" value="{{ connection.port }}" readonly>
-      </div>
-      <div class="field-group field-group-wide">
-        <label>Database</label>
-        <input type="text" value="{{ connection.database }}" readonly>
-      </div>
-      <div class="field-group">
-        <label>Username</label>
-        <input type="text" value="{{ connection.user }}" readonly>
-      </div>
-      <div class="field-group">
-        <label>Password</label>
-        <div class="password-shell">
-          <input type="password" value="••••••••••••" readonly>
-          <span class="material-symbols-outlined">visibility</span>
+        <small>No write access from the frontend.</small>
+      </article>
+      <article class="fact-item">
+        <div>
+          <strong>Transport policy</strong>
+          <span>TLS stays enabled for every app connection to Azure MySQL.</span>
         </div>
-      </div>
-    </div>
-
-    <div class="switch-card">
-      <div class="switch-card-copy">
-        <strong>SSL / TLS</strong>
-        <span>Azure requires secure transport for the live database.</span>
-      </div>
-      <div class="toggle-shell on" aria-hidden="true">
-        <div class="toggle-knob"></div>
-      </div>
-    </div>
-
-    <div class="switch-card">
-      <div class="switch-card-copy">
-        <strong>SSH Tunnel</strong>
-        <span>Bridge through a bastion host if your class setup requires it.</span>
-      </div>
-      <div class="toggle-shell" aria-hidden="true">
-        <div class="toggle-knob"></div>
-      </div>
+        <small>No local socket usage in production.</small>
+      </article>
     </div>
 
     <div class="settings-actions">

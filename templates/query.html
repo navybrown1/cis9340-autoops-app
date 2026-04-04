@@ -73,7 +73,7 @@
         <button class="toolbar-button" type="button" data-action="toggle-history">History</button>
       </div>
       <div class="query-toolbar-status">
-        <div class="status-chip status-chip-active">CONNECTED</div>
+        <div class="section-meta">Live connection</div>
         <div class="engine-label">{{ query_metrics.engine }}</div>
       </div>
     </div>
@@ -195,16 +195,19 @@
     </section>
 
     <section class="rail-block">
-      <div class="rail-title">Active Connections</div>
-      <div class="avatar-row">
+      <div class="rail-title">Session facts</div>
+      <div class="fact-list">
         {% for connection in active_connections %}
-          <div class="avatar-stack-item" title="{{ connection.name }}">
-            <span>{{ connection.name[0] }}</span>
-          </div>
+          <article class="fact-item">
+            <div>
+              <strong>{{ connection.name }}</strong>
+              <span>{{ connection.endpoint }}</span>
+            </div>
+            <small>{{ connection.meta }}</small>
+          </article>
         {% endfor %}
-        <div class="avatar-stack-item avatar-stack-more">+{{ active_connections|length }}</div>
       </div>
-      <p class="rail-note">Currently viewing this query lab against {{ connection_target }}.</p>
+      <p class="rail-note">Currently querying {{ connection_target }}.</p>
     </section>
   </aside>
 </section>
@@ -215,8 +218,8 @@
     <span>UTF-8</span>
     <span>{{ server_label }}</span>
   </div>
-  <div class="footer-metrics">
-    <span class="status-chip status-chip-connected">All changes saved</span>
+  <div class="footer-metrics footer-note">
+    <span>Browser-saved drafts</span>
     <span>v2.4-studio</span>
   </div>
 </footer>

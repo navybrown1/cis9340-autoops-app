@@ -503,31 +503,22 @@ def build_connection_snapshot():
 
 def build_active_connections():
     connection = build_connection_snapshot()
-    local_socket = connection["socket"] or "/tmp/mysql.sock"
     return [
         {
-            "name": connection["name"],
+            "name": "Database endpoint",
             "endpoint": connection["target"],
-            "status": "CONNECTED",
+            "status": "Live",
             "tone": "primary",
-            "meta": f"{connection['database']} · {connection['transport']}",
+            "meta": f"{connection['database']} over {connection['transport']}",
             "icon": "storage",
         },
         {
-            "name": "Read-only app user",
+            "name": "Application role",
             "endpoint": connection["user"],
-            "status": "ACTIVE",
+            "status": "Read only",
             "tone": "tertiary",
             "meta": "SELECT and SHOW VIEW only",
             "icon": "verified_user",
-        },
-        {
-            "name": "Local dev socket",
-            "endpoint": local_socket,
-            "status": "IDLE",
-            "tone": "muted",
-            "meta": "Temporary admin access removed",
-            "icon": "dns",
         },
     ]
 

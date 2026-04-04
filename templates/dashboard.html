@@ -28,8 +28,8 @@
           <div class="signal-title">{{ server_label }}</div>
           <div class="signal-subtitle">{{ connection_target }}</div>
         </div>
-        <span class="status-chip status-chip-active">ACTIVE</span>
       </div>
+      <div class="signal-meta">Live endpoint</div>
       <div class="signal-stats">
         <div>
           <span class="metric-label">Tables</span>
@@ -52,8 +52,8 @@
           <div class="signal-title">Production DB</div>
           <div class="signal-subtitle">{{ database_name }}</div>
         </div>
-        <span class="status-chip status-chip-stable">STABLE</span>
       </div>
+      <div class="signal-meta">Read-only production profile</div>
       <div class="signal-stats">
         <div>
           <span class="metric-label">Views</span>
@@ -127,7 +127,7 @@
           <div class="section-kicker">Live previews</div>
           <h2>Views and summaries</h2>
         </div>
-        <span class="pill">Read only</span>
+        <span class="section-meta">Read-only views</span>
       </div>
 
       <div class="preview-stack">
@@ -198,10 +198,10 @@
     <section class="surface panel">
       <div class="section-head">
         <div>
-          <div class="section-kicker">Query history</div>
-          <h2>Recent activity</h2>
-        </div>
-        <span class="material-symbols-outlined muted-icon">history</span>
+        <div class="section-kicker">Recent queries</div>
+        <h2>Last successful reads</h2>
+      </div>
+        <span class="section-meta">Read only</span>
       </div>
 
       <div class="activity-list">

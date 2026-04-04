@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-  <link href="{{ url_for('static', filename='styles.css') }}?v=20260404-ui2" rel="stylesheet">
+  <link href="{{ url_for('static', filename='styles.css') }}?v=20260404-ui3" rel="stylesheet">
 </head>
 <body data-page="{{ active_page or '' }}">
   <div class="app-shell">
@@ -75,18 +75,7 @@
           >
         </form>
 
-        <div class="topbar-center">
-          <a class="topbar-tab {{ 'active' if active_page in ['dashboard', 'catalog', 'settings'] else '' }}" href="{{ url_for('catalog') }}">Explorer</a>
-          <a class="topbar-tab {{ 'active' if active_page == 'query' else '' }}" href="{{ url_for('query_lab') }}">Logs</a>
-        </div>
-
         <div class="topbar-actions" aria-label="Status and shortcuts">
-          <button class="icon-button" type="button" aria-label="Notifications" data-action="show-notifications">
-            <span class="material-symbols-outlined">notifications</span>
-          </button>
-          <button class="icon-button" type="button" aria-label="Help" data-action="show-help">
-            <span class="material-symbols-outlined">help_outline</span>
-          </button>
           <div class="avatar-chip" aria-label="Workspace avatar">
             <span class="avatar-dot"></span>
             <span>EB</span>
@@ -110,6 +99,6 @@
     </main>
   </div>
   <div id="app-toast" class="app-toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="{{ url_for('static', filename='app.js') }}?v=20260404-ui2" defer></script>
+  <script src="{{ url_for('static', filename='app.js') }}?v=20260404-ui3" defer></script>
 </body>
 </html>
