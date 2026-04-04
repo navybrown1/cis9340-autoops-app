@@ -2,13 +2,15 @@
 {% block content %}
 <section class="query-shell reveal">
   <aside class="surface schema-rail">
-    <div class="rail-head">
-      <div>
-        <div class="section-kicker">Schema Browser</div>
-        <h2>Objects</h2>
-      </div>
-      <span class="rail-refresh material-symbols-outlined">refresh</span>
-    </div>
+        <div class="rail-head">
+          <div>
+            <div class="section-kicker">Schema Browser</div>
+            <h2>Objects</h2>
+          </div>
+          <button class="rail-refresh" type="button" aria-label="Refresh schema browser" data-action="refresh-schema">
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
 
     <div class="schema-tree">
       <details class="schema-group" open>
@@ -66,9 +68,9 @@
           <span class="material-symbols-outlined">play_arrow</span>
           <span>Run Query</span>
         </button>
-        <button class="toolbar-button" type="button">Save</button>
-        <button class="toolbar-button" type="button">Format SQL</button>
-        <button class="toolbar-button" type="button">History</button>
+        <button class="toolbar-button" type="button" data-action="save-query">Save</button>
+        <button class="toolbar-button" type="button" data-action="format-query">Format SQL</button>
+        <button class="toolbar-button" type="button" data-action="toggle-history">History</button>
       </div>
       <div class="query-toolbar-status">
         <div class="status-chip status-chip-active">CONNECTED</div>
@@ -218,6 +220,17 @@
     <span>v2.4-studio</span>
   </div>
 </footer>
+
+<section id="query-history-drawer" class="surface query-history-drawer" hidden>
+  <div class="query-history-head">
+    <div>
+      <div class="section-kicker">Query History</div>
+      <h2>Recent drafts</h2>
+    </div>
+    <button class="toolbar-button" type="button" data-action="toggle-history">Close</button>
+  </div>
+  <div id="query-history-list" class="history-list"></div>
+</section>
 
 <div class="sample-query-row">
   {% for sample in samples %}

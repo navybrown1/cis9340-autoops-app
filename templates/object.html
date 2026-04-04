@@ -22,10 +22,7 @@
       <span class="material-symbols-outlined">download</span>
       <span>Open in Query Lab</span>
     </a>
-    <button class="studio-button studio-button-primary is-disabled" type="button" aria-disabled="true" title="Read only">
-      <span class="material-symbols-outlined">add_circle</span>
-      <span>Add New Row</span>
-    </button>
+    <span class="status-chip status-chip-muted" title="This studio is read only">Read only</span>
   </div>
 </section>
 
@@ -110,13 +107,25 @@
       </form>
 
       <div class="pagination-controls">
-        <a class="studio-icon-button {% if not has_prev %}is-disabled{% endif %}" href="{{ url_for('object_view', object_name=object.table_name, page=page - 1, page_size=page_size) if has_prev else '#' }}">
-          <span class="material-symbols-outlined">chevron_left</span>
-        </a>
+        {% if has_prev %}
+          <a class="studio-icon-button" href="{{ url_for('object_view', object_name=object.table_name, page=page - 1, page_size=page_size) }}">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </a>
+        {% else %}
+          <span class="studio-icon-button is-disabled" aria-disabled="true">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </span>
+        {% endif %}
         <span class="page-index">{{ page }}</span>
-        <a class="studio-icon-button {% if not has_next %}is-disabled{% endif %}" href="{{ url_for('object_view', object_name=object.table_name, page=page + 1, page_size=page_size) if has_next else '#' }}">
-          <span class="material-symbols-outlined">chevron_right</span>
-        </a>
+        {% if has_next %}
+          <a class="studio-icon-button" href="{{ url_for('object_view', object_name=object.table_name, page=page + 1, page_size=page_size) }}">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </a>
+        {% else %}
+          <span class="studio-icon-button is-disabled" aria-disabled="true">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </span>
+        {% endif %}
       </div>
     </footer>
   </section>

@@ -261,6 +261,23 @@ def create_app():
             best_practices=best_practices,
         )
 
+    @app.route("/api/connection-check")
+    def connection_check():
+        db = get_db()
+        db.ping(reconnect=True)
+        with db.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) AS row_count FROM PERSON")
+            person_row = cursor.fetchone() or {"row_count": 0}
+        connection = build_connection_snapshot()
+        return {
+            "ok": True,
+            "message": f"{connection['name']} is live. PERSON has {person_row['row_count']} rows.",
+            "target": connection["target"],
+            "database": connection["database"],
+            "user": connection["user"],
+            "row_count": person_row["row_count"],
+        }
+
     return app
 
 

@@ -133,12 +133,19 @@
         <span class="material-symbols-outlined">verified</span>
         <div>
           <strong>Connection verified</strong>
-          <span>{{ connection_target }}</span>
+          <span id="connection-status-text">{{ connection_target }}</span>
         </div>
       </div>
       <div class="action-row">
-        <button class="studio-button studio-button-secondary" type="button">Test Connection</button>
-        <button class="studio-button studio-button-primary" type="button">Save Changes</button>
+        <button class="studio-button studio-button-secondary" type="button" data-action="test-connection">Test Connection</button>
+        <button
+          class="studio-button studio-button-primary"
+          type="button"
+          data-action="copy-connection"
+          data-copy-text="{{ connection.name }} | {{ connection.host }}:{{ connection.port }} | {{ connection.database }} | {{ connection.user }}"
+        >
+          Copy Connection
+        </button>
       </div>
     </div>
   </section>
