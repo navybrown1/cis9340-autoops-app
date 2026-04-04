@@ -43,7 +43,11 @@ ROLE_CHOICES = {ROLE_ADMIN, ROLE_MANAGER, ROLE_FRONTDESK, ROLE_MECHANIC, ROLE_AN
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Flask(
+        __name__,
+        template_folder=str(BASE_DIR / "templates"),
+        static_folder=str(BASE_DIR / "static"),
+    )
     app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY") or "dev-secret-key-change-me"
     app.config["AUTH_ENABLED"] = env_flag("AUTH_ENABLED", default=False)
     app.config["OPS_WRITE_ENABLED"] = env_flag("OPS_WRITE_ENABLED", default=False)
