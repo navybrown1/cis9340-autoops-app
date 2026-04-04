@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="query-layout reveal">
+  <div class="surface query-panel">
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Query lab</p>
+        <h2>Run safe read-only SQL</h2>
+      </div>
+      <span class="pill">Read only</span>
+    </div>
+
+    <p class="section-copy">Use SELECT, SHOW, DESCRIBE, EXPLAIN, or WITH statements to inspect the database without changing data.</p>
+
+    <div class="query-guides">
+      <div class="query-guide">
+        <span>Safe</span>
+        <strong>No writes</strong>
+      </div>
+      <div class="query-guide">
+        <span>Fast check</span>
+        <strong>LIMIT 5</strong>
+      </div>
+      <div class="query-guide">
+        <span>Best for</span>
+        <strong>Spot checks</strong>
+      </div>
+    </div>
+
+    <form method="post" class="query-form">
+      <label for="sql" class="form-label">SQL</label>
+      <textarea id="sql" name="sql" class="query-textarea" spellcheck="false">{{ sql_text }}</textarea>
+      <div class="action-row">
+        <button type="submit" class="btn btn-primary btn-lg">Run query</button>
+      </div>
+    </form>
+
+    <div class="sample-query-row">
+      {% for sample in samples %}
+        <a class="sample-query" href="{{ url_for('query_lab', sql=sample.sql) }}">{{ sample.label }}</a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="surface result-panel">
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Result set</p>
+        <h2>Output</h2>
+      </div>
+      {% if result %}
+        <div class="pagination-meta">
+          <span>{{ result.row_count }} rows</span>
+          {% if elapsed_ms is not none %}<span>{{ elapsed_ms }} ms</span>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if executed_sql %}
+      <div class="result-sql"><code>{{ executed_sql }}</code></div>
+    {% endif %}
+
+    {% if result %}
+      <div class="result-summary-grid">
+        <div class="result-summary-card">
+          <span>Rows returned</span>
+          <strong>{{ result.row_count }}</strong>
+        </div>
+        <div class="result-summary-card">
+          <span>Columns</span>
+          <strong>{{ result.columns|length }}</strong>
+        </div>
+        <div class="result-summary-card">
+          <span>Execution time</span>
+          <strong>{% if elapsed_ms is not none %}{{ elapsed_ms }} ms{% else %}n/a{% endif %}</strong>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if result %}
+      <div class="table-scroll">
+        <table class="data-table data-table-large">
+          <thead>
+            <tr>
+              {% for column in result.columns %}
+                <th>{{ column }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in result.rows %}
+              <tr>
+                {% for column in result.columns %}
+                  <td>{{ row[column] }}</td>
+                {% endfor %}
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="{{ result.columns|length or 1 }}" class="empty-cell">Query returned no rows.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state large">
+        Run a query to inspect rows and schema details here.
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

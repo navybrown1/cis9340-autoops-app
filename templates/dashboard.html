@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="intro-panel surface reveal">
+  <div class="intro-copy">
+    <p class="section-kicker">Live overview</p>
+    <h2>Browse the database like a product, not a spreadsheet.</h2>
+    <p class="section-copy">Inspect tables, open views, and run safe read-only queries against <strong>{{ database_name }}</strong>.</p>
+    <div class="action-row">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('query_lab') }}">Open Query Lab</a>
+      <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('object_view', object_name='PERSON') }}">Open PERSON</a>
+    </div>
+  </div>
+  <div class="intro-aside">
+    <div class="summary-ring">
+      <div class="summary-ring-inner">
+        <span>Live</span>
+        <strong>{{ stats.objects }}</strong>
+        <small>objects</small>
+      </div>
+    </div>
+    <div class="signal-stack">
+      <div class="signal-card signal-card-primary">
+        <span class="signal-label">Largest table</span>
+        <strong>{{ spotlight.largest_table.display_name if spotlight.largest_table else 'N/A' }}</strong>
+        <div class="signal-meta">{{ spotlight.largest_table.row_count if spotlight.largest_table else 0 }} rows · {{ spotlight.largest_table.column_count if spotlight.largest_table else 0 }} columns</div>
+        <div class="meter">
+          <span style="width: {{ ((spotlight.largest_table.row_count / spotlight.table_row_max) * 100) if spotlight.largest_table and spotlight.table_row_max else 0 }}%"></span>
+        </div>
+      </div>
+      <div class="signal-card">
+        <span class="signal-label">Widest object</span>
+        <strong>{{ spotlight.widest_object.display_name if spotlight.widest_object else 'N/A' }}</strong>
+        <div class="signal-meta">{{ spotlight.widest_object.column_count if spotlight.widest_object else 0 }} columns</div>
+      </div>
+      <div class="signal-card">
+        <span class="signal-label">Smallest shape</span>
+        <strong>{{ spotlight.smallest_object.display_name if spotlight.smallest_object else 'N/A' }}</strong>
+        <div class="signal-meta">{{ spotlight.smallest_object.column_count if spotlight.smallest_object else 0 }} columns</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="metric-grid reveal delay-1">
+  <div class="metric-card">
+    <span class="metric-label">Tables</span>
+    <strong>{{ stats.tables }}</strong>
+    <small>base tables in the schema</small>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">Views</span>
+    <strong>{{ stats.views }}</strong>
+    <small>saved report surfaces</small>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">Rows</span>
+    <strong>{{ stats.rows }}</strong>
+    <small>live rows across base tables</small>
+  </div>
+  <div class="metric-card">
+    <span class="metric-label">Status</span>
+    <strong>Connected</strong>
+    <small>{{ connection_target }}</small>
+  </div>
+</section>
+
+<section class="workspace-grid reveal delay-2">
+  <div class="surface catalog-panel">
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Object catalog</p>
+        <h3>Tables and views</h3>
+      </div>
+      <span class="pill">{{ catalog|length }} results</span>
+    </div>
+
+    <div class="catalog-summary">
+      <div class="catalog-summary-item">
+        <span>Largest view</span>
+        <strong>{{ spotlight.largest_view.display_name if spotlight.largest_view else 'N/A' }}</strong>
+      </div>
+      <div class="catalog-summary-item">
+        <span>Base tables</span>
+        <strong>{{ stats.tables }}</strong>
+      </div>
+      <div class="catalog-summary-item">
+        <span>Views</span>
+        <strong>{{ stats.views }}</strong>
+      </div>
+    </div>
+
+    <div class="catalog-list">
+      {% for item in catalog %}
+        <a class="catalog-row" href="{{ url_for('object_view', object_name=item.table_name) }}">
+          <div class="catalog-main">
+            <div class="catalog-title">{{ item.display_name }}</div>
+            <div class="catalog-subtitle">{{ item.table_name }} · {{ item.column_count }} columns</div>
+          </div>
+          <div class="catalog-meta">
+            <span class="kind-chip {{ 'view' if item.table_type == 'VIEW' else 'table' }}">{{ item.kind_label }}</span>
+            <span class="row-count">{{ item.row_count }} rows</span>
+          </div>
+        </a>
+      {% else %}
+        <div class="empty-state">No objects matched your search.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="sample-stack">
+    <section class="surface sample-panel sample-panel-hero">
+      <div class="section-head">
+        <div>
+          <p class="section-kicker">What is hot</p>
+          <h3>Largest tables</h3>
+        </div>
+        <span class="pill">Ranked by rows</span>
+      </div>
+      <div class="insight-list">
+        {% for item in spotlight.top_tables %}
+          <div class="insight-row">
+            <div class="insight-row-top">
+              <strong>{{ item.display_name }}</strong>
+              <span>{{ item.row_count }} rows</span>
+            </div>
+            <div class="meter">
+              <span style="width: {{ ((item.row_count / spotlight.table_row_max) * 100) if spotlight.table_row_max else 0 }}%"></span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% for sample in samples %}
+      <section class="surface sample-panel">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">{{ sample.kind_label }}</p>
+            <h3>{{ sample.title }}</h3>
+          </div>
+          <a class="text-link" href="{{ url_for('object_view', object_name=sample.object_name) }}">Open</a>
+        </div>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                {% for column in sample.columns %}
+                  <th>{{ column.column_name }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in sample.rows %}
+                <tr>
+                  {% for column in sample.columns %}
+                    <td>{{ row[column.column_name] }}</td>
+                  {% endfor %}
+                </tr>
+              {% else %}
+                <tr>
+                  <td colspan="{{ sample.columns|length or 1 }}" class="empty-cell">No rows found.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="object-header surface reveal">
+  <div>
+    <p class="section-kicker">Object browser</p>
+    <h2>{{ object.display_name }}</h2>
+    <p class="section-copy">Inspecting <code>{{ object.table_name }}</code> with {{ object.column_count }} columns and {{ total_rows }} rows.</p>
+  </div>
+  <div class="header-actions">
+    <span class="kind-chip {{ 'view' if object.table_type == 'VIEW' else 'table' }}">{{ object.kind_label }}</span>
+    <a class="btn btn-outline-secondary" href="{{ url_for('query_lab', sql='SELECT * FROM `' ~ object.table_name ~ '` LIMIT 10;') }}">Open in Query Lab</a>
+  </div>
+</section>
+
+<section class="object-layout reveal delay-1">
+  <aside class="surface column-panel">
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Schema</p>
+        <h3>Columns</h3>
+      </div>
+      <span class="pill">{{ object.column_count }}</span>
+    </div>
+
+    <div class="column-list">
+      {% for column in columns %}
+        <div class="column-row">
+          <div class="column-name">{{ column.column_name }}</div>
+          <div class="column-meta">
+            <span>{{ column.column_type }}</span>
+            <span>{{ column.is_nullable }}</span>
+            {% if column.column_key %}<span>{{ column.column_key }}</span>{% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <section class="surface data-panel">
+    <div class="section-head">
+      <div>
+        <p class="section-kicker">Rows</p>
+        <h3>Current page</h3>
+      </div>
+      <div class="pagination-meta">
+        <span>Page {{ page }} of {{ total_pages }}</span>
+        <span>{{ page_size }} per page</span>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table class="data-table data-table-large">
+        <thead>
+          <tr>
+            {% for column in columns %}
+              <th>{{ column.column_name }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for column in columns %}
+                <td>{{ row[column.column_name] }}</td>
+              {% endfor %}
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="{{ columns|length or 1 }}" class="empty-cell">No rows found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-row">
+      <a class="btn btn-outline-secondary {% if not has_prev %}disabled{% endif %}" href="{{ url_for('object_view', object_name=object.table_name, page=page - 1, page_size=page_size) if has_prev else '#' }}">Previous</a>
+      <div class="page-summary">{{ total_rows }} rows total</div>
+      <a class="btn btn-outline-secondary {% if not has_next %}disabled{% endif %}" href="{{ url_for('object_view', object_name=object.table_name, page=page + 1, page_size=page_size) if has_next else '#' }}">Next</a>
+    </div>
+  </section>
+</section>
+{% endblock %}
