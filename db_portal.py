@@ -1755,7 +1755,7 @@ def load_product_options(db):
             SELECT column_name
             FROM information_schema.columns
             WHERE table_schema = %s
-              AND table_name = 'PRODUCT'
+              AND LOWER(table_name) = 'product'
             """,
             (DEFAULT_DATABASE,),
         )
