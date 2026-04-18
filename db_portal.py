@@ -438,15 +438,7 @@ def create_app():
             LIMIT 200
             """,
         )
-        product_options = safe_rows_query(
-            db,
-            """
-            SELECT product_ID, description, value
-            FROM PRODUCT
-            ORDER BY product_ID
-            LIMIT 200
-            """,
-        )
+        product_options = load_product_options(db)
         sales_rows = safe_rows_query(
             db,
             """
@@ -1752,6 +1744,48 @@ def safe_rows_query(db, sql, params=None):
             return cursor.fetchall()
     except pymysql.MySQLError:
         return []
+
+
+def load_product_options(db):
+    product_columns = {
+        row["column_name"].lower()
+        for row in safe_rows_query(
+            db,
+            """
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = %s
+              AND table_name = 'PRODUCT'
+            """,
+            (DEFAULT_DATABASE,),
+        )
+    }
+
+    if {"description", "value"}.issubset(product_columns):
+        return safe_rows_query(
+            db,
+            """
+            SELECT product_ID, description, value
+            FROM PRODUCT
+            ORDER BY product_ID
+            LIMIT 200
+            """,
+        )
+
+    return safe_rows_query(
+        db,
+        """
+        SELECT
+            pr.product_ID,
+            COALESCE(CONCAT(c.make, ' ', c.model), pt.part_name, CONCAT('Product ', pr.product_ID)) AS description,
+            pr.price AS value
+        FROM PRODUCT pr
+        LEFT JOIN CAR c ON pr.product_ID = c.product_ID
+        LEFT JOIN PART pt ON pr.product_ID = pt.product_ID
+        ORDER BY pr.product_ID
+        LIMIT 200
+        """,
+    )
 
 
 def run_read_only_query(db, sql_text):
