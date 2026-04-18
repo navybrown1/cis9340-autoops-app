@@ -1747,30 +1747,17 @@ def safe_rows_query(db, sql, params=None):
 
 
 def load_product_options(db):
-    product_columns = {
-        row["column_name"].lower()
-        for row in safe_rows_query(
-            db,
-            """
-            SELECT column_name
-            FROM information_schema.columns
-            WHERE table_schema = %s
-              AND LOWER(table_name) = 'product'
-            """,
-            (DEFAULT_DATABASE,),
-        )
-    }
-
-    if {"description", "value"}.issubset(product_columns):
-        return safe_rows_query(
-            db,
-            """
-            SELECT product_ID, description, value
-            FROM PRODUCT
-            ORDER BY product_ID
-            LIMIT 200
-            """,
-        )
+    legacy_rows = safe_rows_query(
+        db,
+        """
+        SELECT product_ID, description, value
+        FROM PRODUCT
+        ORDER BY product_ID
+        LIMIT 200
+        """,
+    )
+    if legacy_rows:
+        return legacy_rows
 
     return safe_rows_query(
         db,
