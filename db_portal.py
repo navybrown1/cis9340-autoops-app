@@ -379,11 +379,12 @@ def create_app():
             """
             SELECT employee_ID, CONCAT(first_name, ' ', last_name, ' - ', role) AS employee_label
             FROM vw_employee_profile
-            WHERE role LIKE '%Mechanic%'
-               OR role LIKE '%Manager%'
+            WHERE role LIKE %s
+               OR role LIKE %s
             ORDER BY first_name, last_name
             LIMIT 200
             """,
+            ("%Mechanic%", "%Manager%"),
         )
         return render_template(
             "ops_repairs.html",
