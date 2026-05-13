@@ -3,13 +3,37 @@
 -- Additive script for role-oriented operational/reporting surfaces.
 -- ============================================================================
 
-USE cis9340_physical_database;
+USE cis9340_physical_database_updated;
 
 DROP VIEW IF EXISTS vw_sales_daily_rollup;
 DROP VIEW IF EXISTS vw_inventory_low_stock;
 DROP VIEW IF EXISTS vw_mechanic_repair_queue;
 DROP VIEW IF EXISTS vw_manager_branch_summary;
 DROP VIEW IF EXISTS vw_frontdesk_customer_search;
+
+CREATE OR REPLACE VIEW vw_branch_inventory AS
+SELECT
+    b.branch_ID,
+    b.address AS branch_address,
+    pr.product_ID,
+    pr.product_type,
+    CASE pr.product_type
+        WHEN 'CAR' THEN CONCAT(c.year, ' ', c.make, ' ', c.model)
+        WHEN 'PART' THEN pt.part_name
+        ELSE CONCAT('Product #', pr.product_ID)
+    END AS product_description,
+    pr.price,
+    i.quantity_in_stock,
+    i.reorder_level,
+    CASE
+        WHEN i.quantity_in_stock <= i.reorder_level THEN 'REORDER'
+        ELSE 'OK'
+    END AS stock_status
+FROM INVENTORY i
+JOIN BRANCH b ON i.branch_ID = b.branch_ID
+JOIN PRODUCT pr ON i.product_ID = pr.product_ID
+LEFT JOIN CAR c ON pr.product_ID = c.product_ID
+LEFT JOIN PART pt ON pr.product_ID = pt.product_ID;
 
 CREATE VIEW vw_frontdesk_customer_search AS
 SELECT
@@ -62,8 +86,8 @@ SELECT
     branch_address,
     product_ID,
     product_type,
-    description,
-    quantity_in_inventory,
+    product_description,
+    quantity_in_stock,
     reorder_level,
     stock_status
 FROM vw_branch_inventory

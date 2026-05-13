@@ -77,7 +77,7 @@
           <select name="car_id" {% if not writes_enabled %}disabled{% endif %} required>
             <option value="">Select vehicle</option>
             {% for row in cars %}
-              <option value="{{ row.product_ID }}">{{ row.product_ID }} - {{ row.car_label }}</option>
+              <option value="{{ row.product_ID }}">{{ row.product_ID }} - {{ row.car_label }} / owner customer {{ row.owner_customer_ID }}</option>
             {% endfor %}
           </select>
         </label>
@@ -103,6 +103,15 @@
         <label><span>Time</span><input type="time" name="time" {% if not writes_enabled %}disabled{% endif %} required></label>
         <label><span>Type</span><input type="text" name="appointment_type" placeholder="Oil Change" {% if not writes_enabled %}disabled{% endif %} required></label>
         <label><span>Status</span><input type="text" name="status" value="Scheduled" {% if not writes_enabled %}disabled{% endif %} required></label>
+        <label>
+          <span>Booking channel</span>
+          <select name="booking_channel" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="Web">Web</option>
+            <option value="Mobile">Mobile</option>
+            <option value="Walk-in">Walk-in</option>
+            <option value="Phone">Phone</option>
+          </select>
+        </label>
         <button class="studio-button studio-button-primary" type="submit" {% if not writes_enabled %}disabled{% endif %}>Schedule appointment</button>
       </form>
     </section>

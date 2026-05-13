@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent
 if load_dotenv is not None:
     load_dotenv(BASE_DIR / ".env", override=False)
 
-DEFAULT_DATABASE = os.getenv("MYSQL_DATABASE", "cis9340_physical_database")
+DEFAULT_DATABASE = os.getenv("MYSQL_DATABASE", "cis9340_physical_database_updated")
 DEFAULT_USER = os.getenv("MYSQL_USER", "root")
 DEFAULT_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 DEFAULT_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
@@ -217,6 +217,7 @@ def create_app():
                 "appointment_type": (request.form.get("appointment_type") or "").strip(),
                 "status": (request.form.get("status") or "Scheduled").strip(),
                 "employee_id": request.form.get("employee_id"),
+                "booking_channel": (request.form.get("booking_channel") or "Web").strip(),
             }
             appointment_id, error = create_appointment_record(db, payload)
             if error:
@@ -256,9 +257,12 @@ def create_app():
         cars = safe_rows_query(
             db,
             """
-            SELECT product_ID, CONCAT(make, ' ', model, ' (', year, ')') AS car_label
+            SELECT
+                product_ID,
+                owner_customer_ID,
+                CONCAT(make, ' ', model, ' (', year, ')') AS car_label
             FROM CAR
-            ORDER BY make, model, year
+            ORDER BY owner_customer_ID, make, model, year
             LIMIT 200
             """,
         )
@@ -408,9 +412,12 @@ def create_app():
             payload = {
                 "branch_id": request.form.get("branch_id"),
                 "customer_id": request.form.get("customer_id"),
+                "employee_id": request.form.get("employee_id"),
                 "date": (request.form.get("date") or "").strip(),
                 "time": (request.form.get("time") or "").strip(),
                 "delivery_method": (request.form.get("delivery_method") or "").strip() or None,
+                "delivery_address": (request.form.get("delivery_address") or "").strip() or None,
+                "delivery_status": (request.form.get("delivery_status") or "").strip() or None,
                 "product_id": request.form.get("product_id"),
                 "quantity": request.form.get("quantity"),
                 "unit_price": request.form.get("unit_price"),
@@ -440,6 +447,19 @@ def create_app():
             """,
         )
         product_options = load_product_options(db)
+        employee_options = safe_rows_query(
+            db,
+            """
+            SELECT employee_ID, CONCAT(first_name, ' ', last_name, ' - ', role) AS employee_label
+            FROM vw_employee_profile
+            WHERE role LIKE %s
+               OR role LIKE %s
+               OR role LIKE %s
+            ORDER BY first_name, last_name
+            LIMIT 200
+            """,
+            ("%Sales%", "%Manager%", "%Front%"),
+        )
         sales_rows = safe_rows_query(
             db,
             """
@@ -456,6 +476,7 @@ def create_app():
             branch_options=branch_options,
             customer_options=customer_options,
             product_options=product_options,
+            employee_options=employee_options,
             sales_rows=sales_rows,
             writes_enabled=writes_enabled,
         )
@@ -469,10 +490,18 @@ def create_app():
             rows = safe_rows_query(
                 db,
                 """
-                SELECT branch_ID, branch_address, product_ID, product_type, description, quantity_in_inventory, reorder_level, stock_status
+                SELECT
+                    branch_ID,
+                    branch_address,
+                    product_ID,
+                    product_type,
+                    product_description AS description,
+                    quantity_in_stock AS quantity_in_inventory,
+                    reorder_level,
+                    stock_status
                 FROM vw_branch_inventory
                 WHERE branch_ID = %s
-                ORDER BY stock_status DESC, quantity_in_inventory ASC, product_ID ASC
+                ORDER BY stock_status DESC, quantity_in_stock ASC, product_ID ASC
                 LIMIT 200
                 """,
                 (branch_filter,),
@@ -481,9 +510,17 @@ def create_app():
             rows = safe_rows_query(
                 db,
                 """
-                SELECT branch_ID, branch_address, product_ID, product_type, description, quantity_in_inventory, reorder_level, stock_status
+                SELECT
+                    branch_ID,
+                    branch_address,
+                    product_ID,
+                    product_type,
+                    product_description AS description,
+                    quantity_in_stock AS quantity_in_inventory,
+                    reorder_level,
+                    stock_status
                 FROM vw_branch_inventory
-                ORDER BY stock_status DESC, quantity_in_inventory ASC, branch_ID ASC
+                ORDER BY stock_status DESC, quantity_in_stock ASC, branch_ID ASC
                 LIMIT 300
                 """,
             )
@@ -617,10 +654,18 @@ def create_app():
         alert_rows = safe_rows_query(
             db,
             """
-            SELECT branch_ID, branch_address, product_ID, product_type, description, quantity_in_inventory, reorder_level, stock_status
+            SELECT
+                branch_ID,
+                branch_address,
+                product_ID,
+                product_type,
+                product_description AS description,
+                quantity_in_stock AS quantity_in_inventory,
+                reorder_level,
+                stock_status
             FROM vw_branch_inventory
             WHERE stock_status = 'REORDER'
-            ORDER BY branch_ID ASC, quantity_in_inventory ASC, product_ID ASC
+            ORDER BY branch_ID ASC, quantity_in_stock ASC, product_ID ASC
             """,
         )
         return render_template(
@@ -965,13 +1010,13 @@ def authenticate_user(db, username, password):
     try:
         user_row = load_user_by_username(db, username)
     except pymysql.MySQLError:
-        return None, "Authentication is not ready. Ensure the users table exists and is readable."
+        return None, "Authentication is not ready. Ensure the LOGIN table exists and is readable."
 
     if not user_row or not user_row.get("is_active"):
         return None, "Invalid username or password."
     if user_row.get("role") not in ROLE_CHOICES:
         return None, "User role is not configured correctly."
-    if not check_password_hash(user_row["password_hash"], password):
+    if not password_matches(user_row["password_hash"], password):
         return None, "Invalid username or password."
 
     return (
@@ -989,9 +1034,25 @@ def load_user_by_username(db, username):
     with db.cursor() as cursor:
         cursor.execute(
             """
-            SELECT user_id, username, display_name, role, password_hash, is_active
-            FROM users
-            WHERE username = %s
+            SELECT
+                p.person_ID AS user_id,
+                l.username,
+                CONCAT(p.first_name, ' ', p.last_name) AS display_name,
+                CASE
+                    WHEN l.username = 'robert.kim' THEN 'admin'
+                    WHEN e.role IS NULL THEN 'frontdesk'
+                    WHEN LOWER(e.role) LIKE '%%manager%%' THEN 'manager'
+                    WHEN LOWER(e.role) LIKE '%%mechanic%%' THEN 'mechanic'
+                    WHEN LOWER(e.role) LIKE '%%sales%%' THEN 'frontdesk'
+                    WHEN LOWER(e.role) LIKE '%%inventory%%' THEN 'analyst'
+                    ELSE 'frontdesk'
+                END AS role,
+                l.password AS password_hash,
+                1 AS is_active
+            FROM LOGIN l
+            JOIN PERSON p ON l.person_ID = p.person_ID
+            LEFT JOIN EMPLOYEE e ON p.person_ID = e.person_ID
+            WHERE l.username = %s
             LIMIT 1
             """,
             (username,),
@@ -1002,6 +1063,15 @@ def load_user_by_username(db, username):
     user = normalize_row(row)
     user["is_active"] = bool(user.get("is_active"))
     return user
+
+
+def password_matches(stored_password, submitted_password):
+    stored = stored_password or ""
+    # Final classroom seed data currently uses placeholder password strings.
+    # If real Werkzeug hashes are later stored, this keeps working without another code change.
+    if stored.startswith(("scrypt:", "pbkdf2:", "argon2:", "bcrypt:")):
+        return check_password_hash(stored, submitted_password)
+    return stored == submitted_password
 
 
 def build_nav_items(auth_enabled, role):
@@ -1375,10 +1445,16 @@ def build_ops_dashboard_data(db):
     alerts = safe_rows_query(
         db,
         """
-        SELECT branch_ID, product_ID, description, quantity_in_inventory, reorder_level, stock_status
+        SELECT
+            branch_ID,
+            product_ID,
+            product_description AS description,
+            quantity_in_stock AS quantity_in_inventory,
+            reorder_level,
+            stock_status
         FROM vw_branch_inventory
         WHERE stock_status = 'REORDER'
-        ORDER BY branch_ID, quantity_in_inventory
+        ORDER BY branch_ID, quantity_in_stock
         LIMIT 8
         """,
     )
@@ -1426,10 +1502,15 @@ def build_reports_overview_data(db):
     inventory_alerts = safe_rows_query(
         db,
         """
-        SELECT branch_ID, product_ID, description, quantity_in_inventory, reorder_level
+        SELECT
+            branch_ID,
+            product_ID,
+            product_description AS description,
+            quantity_in_stock AS quantity_in_inventory,
+            reorder_level
         FROM vw_branch_inventory
         WHERE stock_status = 'REORDER'
-        ORDER BY branch_ID, quantity_in_inventory
+        ORDER BY branch_ID, quantity_in_stock
         LIMIT 10
         """,
     )
@@ -1526,8 +1607,21 @@ def create_appointment_record(db, payload):
     time_value = (payload.get("time") or "").strip()
     appointment_type = (payload.get("appointment_type") or "").strip()
     status = (payload.get("status") or "Scheduled").strip()
+    booking_channel = (payload.get("booking_channel") or "Web").strip()
     if not date_value or not time_value or not appointment_type:
         return None, "Date, time, and appointment type are required."
+    if booking_channel not in {"Web", "Mobile", "Walk-in", "Phone"}:
+        return None, "Booking channel must be Web, Mobile, Walk-in, or Phone."
+
+    owner_rows = safe_rows_query(
+        db,
+        "SELECT owner_customer_ID FROM CAR WHERE product_ID = %s LIMIT 1",
+        (car_id,),
+    )
+    if not owner_rows:
+        return None, f"Car {car_id} was not found."
+    if int(owner_rows[0]["owner_customer_ID"]) != customer_id:
+        return None, "Selected customer does not own the selected vehicle."
 
     try:
         appointment_id = next_numeric_id(db, "APPOINTMENT", "appointment_ID")
@@ -1535,8 +1629,9 @@ def create_appointment_record(db, payload):
             cursor.execute(
                 """
                 INSERT INTO APPOINTMENT (
-                    appointment_ID, customer_ID, car_id, branch_ID, date, time, appointment_type, status, employee_ID
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    appointment_ID, customer_ID, car_ID, branch_ID, date, time,
+                    appointment_type, status, employee_ID, booking_channel
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     appointment_id,
@@ -1548,6 +1643,7 @@ def create_appointment_record(db, payload):
                     appointment_type,
                     status,
                     employee_id,
+                    booking_channel,
                 ),
             )
         return appointment_id, None
@@ -1559,18 +1655,32 @@ def create_sale_record(db, payload):
     try:
         branch_id = int(payload.get("branch_id"))
         customer_id = int(payload.get("customer_id"))
+        employee_id = int(payload.get("employee_id"))
         product_id = int(payload.get("product_id"))
         quantity = int(payload.get("quantity"))
     except (TypeError, ValueError):
-        return None, "Branch, customer, product, and quantity are required."
+        return None, "Branch, customer, employee, product, and quantity are required."
     if quantity <= 0:
         return None, "Quantity must be greater than zero."
 
     date_value = (payload.get("date") or "").strip()
     time_value = (payload.get("time") or "").strip()
-    delivery_method = payload.get("delivery_method")
+    delivery_method = (payload.get("delivery_method") or "Pickup").strip()
+    delivery_address = payload.get("delivery_address")
+    delivery_status = (payload.get("delivery_status") or "").strip()
     if not date_value or not time_value:
         return None, "Date and time are required."
+    if delivery_method not in {"Pickup", "Delivery"}:
+        return None, "Delivery method must be Pickup or Delivery."
+    if delivery_method == "Pickup":
+        delivery_address = None
+        delivery_status = "N/A"
+    elif not delivery_address:
+        return None, "Delivery address is required when delivery method is Delivery."
+    elif not delivery_status:
+        delivery_status = "Pending"
+    if delivery_status not in {"Pending", "Ready", "Completed", "Failed", "N/A"}:
+        return None, "Delivery status must be Pending, Ready, Completed, Failed, or N/A."
 
     unit_price = parse_decimal(payload.get("unit_price"))
     if unit_price is None:
@@ -1585,17 +1695,23 @@ def create_sale_record(db, payload):
         with db.cursor() as cursor:
             cursor.execute(
                 """
-                INSERT INTO SALE (sale_ID, branch_ID, customer_ID, date, time, total_amount, delivery_method)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO SALE (
+                    sale_ID, branch_ID, customer_ID, employee_ID, date, time,
+                    total_amount, delivery_method, delivery_address, delivery_status
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     sale_id,
                     branch_id,
                     customer_id,
+                    employee_id,
                     date_value,
                     time_value,
                     total_amount,
                     delivery_method,
+                    delivery_address,
+                    delivery_status,
                 ),
             )
             cursor.execute(

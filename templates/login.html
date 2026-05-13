@@ -23,9 +23,9 @@
     </form>
 
     <p class="auth-note">
-      Role accounts are created by the SQL bootstrap
-      <code>add_users_auth.sql</code> (under <code>database/mysql/</code>).
-      Rotate passwords after first sign-in.
+      Role access now uses the final <code>LOGIN</code> table joined to
+      <code>PERSON</code> and <code>EMPLOYEE</code>; no legacy
+      <code>users</code> table is required.
     </p>
   </article>
 </section>

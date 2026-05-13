@@ -81,9 +81,36 @@
             {% endfor %}
           </select>
         </label>
+        <label>
+          <span>Employee</span>
+          <select name="employee_id" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="">Select employee</option>
+            {% for row in employee_options %}
+              <option value="{{ row.employee_ID }}">{{ row.employee_ID }} - {{ row.employee_label }}</option>
+            {% endfor %}
+          </select>
+        </label>
         <label><span>Date</span><input type="date" name="date" {% if not writes_enabled %}disabled{% endif %} required></label>
         <label><span>Time</span><input type="time" name="time" {% if not writes_enabled %}disabled{% endif %} required></label>
-        <label><span>Delivery method</span><input type="text" name="delivery_method" placeholder="Pickup" {% if not writes_enabled %}disabled{% endif %}></label>
+        <label>
+          <span>Delivery method</span>
+          <select name="delivery_method" {% if not writes_enabled %}disabled{% endif %} required>
+            <option value="Pickup">Pickup</option>
+            <option value="Delivery">Delivery</option>
+          </select>
+        </label>
+        <label><span>Delivery address</span><input type="text" name="delivery_address" placeholder="Required only for Delivery" {% if not writes_enabled %}disabled{% endif %}></label>
+        <label>
+          <span>Delivery status</span>
+          <select name="delivery_status" {% if not writes_enabled %}disabled{% endif %}>
+            <option value="">Auto</option>
+            <option value="Pending">Pending</option>
+            <option value="Ready">Ready</option>
+            <option value="Completed">Completed</option>
+            <option value="Failed">Failed</option>
+            <option value="N/A">N/A</option>
+          </select>
+        </label>
         <label>
           <span>Product</span>
           <select name="product_id" {% if not writes_enabled %}disabled{% endif %} required>
